@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v1.9</title>
+<title>Teadrunk v2.0</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -306,7 +306,7 @@
     animation:pill-pulse 2s ease-in-out infinite;
   }
   .save-pill.has-file{
-    background:#E8F5E9; color:#2E7D32; border:1px solid #C8E6C9;
+    display:none !important;
   }
   .save-pill.saving{opacity:.6;}
   @keyframes pill-pulse{0%,100%{opacity:1;}50%{opacity:.65;}}
@@ -482,7 +482,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         </div>
         <div class="field">
           <label>Notizen</label>
-          <textarea id="field-notizen" placeholder="Aroma, Aufguss, Eindrücke…"></textarea>
+          <textarea id="field-notizen" placeholder="Aroma, Aufguss, Eindrücke…" rows="4" style="min-height:80px;height:auto;overflow:hidden;resize:none;"></textarea>
         </div>
       </div>
 
@@ -524,7 +524,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v1.9</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v2.0</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1129,7 +1129,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v1.9";
+  const APP_VERSION = "v2.0";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1190,10 +1190,21 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   /* ============================================================
      NAVIGATION
   ============================================================ */
-  function showView(id){
+  function showView(id, pushState){
     document.querySelectorAll(".view").forEach(v => v.dataset.active = (v.id===id) ? "true":"false");
     window.scrollTo(0,0);
+    if(pushState && id === "view-detail"){
+      history.pushState({view:"detail"}, "");
+    }
   }
+
+  window.addEventListener("popstate", async function(e){
+    const detailActive = document.getElementById("view-detail").dataset.active === "true";
+    if(detailActive){
+      await saveCurrentTea();
+      closeDetail();
+    }
+  });
 
   async function createNewTea(){
     const newTea = {
@@ -1222,7 +1233,9 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     document.getElementById("field-typ").value = t.typ || "";
     document.getElementById("field-gekauftbei").value = t.gekauftBei || "";
     document.getElementById("field-preis").value = t.preis || "";
-    document.getElementById("field-notizen").value = t.notizen || "";
+    const notizenEl = document.getElementById("field-notizen");
+    notizenEl.value = t.notizen || "";
+    setTimeout(()=>{ notizenEl.style.height="auto"; notizenEl.style.height=notizenEl.scrollHeight+"px"; }, 50);
 
     renderStarWidget(t.bewertung || 0);
 
@@ -1239,7 +1252,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     renderGallery();
     renderThumbStrip();
 
-    showView("view-detail");
+    showView("view-detail", true);
   }
 
   function closeDetail(){
@@ -1283,6 +1296,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       const el = document.getElementById(id);
       const evt = (el.tagName === "SELECT") ? "change" : "input";
       el.addEventListener(evt, scheduleSave);
+      if(id === "field-notizen"){
+        el.addEventListener("input", function(){
+          this.style.height = "auto";
+          this.style.height = this.scrollHeight + "px";
+        });
+      }
     });
 
     document.getElementById("btn-delete-tea").addEventListener("click", async () => {
