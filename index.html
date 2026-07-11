@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v2.5</title>
+<title>Teadrunk v2.6</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -552,7 +552,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v2.5</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v2.6</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1157,7 +1157,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v2.5";
+  const APP_VERSION = "v2.6";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1528,9 +1528,18 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
+        const dataURL = e.target.result;
+        // If result is not a valid data URL, create one with correct mime type
+        const src = dataURL.startsWith('data:') ? dataURL
+          : 'data:image/jpeg;base64,' + btoa(dataURL);
         const img = new Image();
         img.onload = () => {
           let w = img.width, h = img.height;
+          // If image has no dimensions, resolve with original data
+          if(!w || !h){
+            resolve(src);
+            return;
+          }
           if(w > MAX_PHOTO_DIM || h > MAX_PHOTO_DIM){
             if(w > h){ h = Math.round(h * MAX_PHOTO_DIM/w); w = MAX_PHOTO_DIM; }
             else { w = Math.round(w * MAX_PHOTO_DIM/h); h = MAX_PHOTO_DIM; }
@@ -1541,10 +1550,15 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
           ctx.drawImage(img, 0, 0, w, h);
           resolve(canvas.toDataURL("image/jpeg", 0.85));
         };
-        img.onerror = reject;
-        img.src = e.target.result;
+        img.onerror = function(){
+          // Fallback: store raw data URL as-is
+          console.warn("Image decode failed, storing raw:", file.name);
+          resolve(src);
+        };
+        img.src = src;
       };
       reader.onerror = reject;
+      // Always read as data URL — works regardless of MIME type
       reader.readAsDataURL(file);
     });
   }
@@ -2682,9 +2696,29 @@ const SEED_TEAS = [
           }
           done++;
         } catch(e){
-          console.error("Photo error:", file.name, e);
-          errors++;
-          done++;
+          console.error("Photo error:", file.name, e.message || e);
+          // Try storing raw file as fallback
+          try{
+            const raw = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = ev => res(ev.target.result);
+              r.onerror = rej;
+              r.readAsDataURL(file);
+            });
+            const photoObj = {teaId, dataURL: raw, order: order++};
+            const newId = await dbPut("photos", photoObj);
+            if(isFirst){
+              const tea = await dbGet("teas", teaId);
+              if(tea){ tea.mainPhotoId = newId; await dbPut("teas", tea); }
+              isFirst = false;
+            }
+            done++;
+            console.log("Saved raw fallback for", file.name);
+          } catch(e2){
+            console.error("Fallback also failed:", file.name, e2);
+            errors++;
+            done++;
+          }
         }
         progressBar.style.width = Math.round(done/total*100) + "%";
         statusEl.textContent = done + " / " + total + " Bilder gespeichert...";
