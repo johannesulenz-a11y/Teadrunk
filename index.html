@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.6</title>
+<title>Teadrunk v3.8</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -558,7 +558,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.6</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.8</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1166,7 +1166,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v3.6";
+  const APP_VERSION = "v3.8";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1344,7 +1344,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     });
   }
 
-  async function saveCurrentTea(){
+  async function saveCurrentTea(showConfirmation){
     if(!currentTeaId) return;
     const t = await dbGet("teas", currentTeaId);
     if(!t) return;
@@ -1359,11 +1359,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     t.notizen = document.getElementById("field-notizen").value;
     t.updatedAt = Date.now();
     await dbPut("teas", t);
+    if(showConfirmation) toast("✓ Gespeichert");
   }
 
   function setupDetailEvents(){
     document.getElementById("btn-back").addEventListener("click", async () => {
-      await saveCurrentTea();
+      await saveCurrentTea(true);
       closeDetail();
     });
     ["field-name","field-originalname","field-teesorte","field-herkunft","field-status","field-typ","field-gekauftbei","field-preis","field-notizen"].forEach(id => {
@@ -2674,8 +2675,23 @@ const SEED_TEAS = [
     );
     console.log("Import: image files:", imageFiles.length, imageFiles.slice(0,3).map(f=>f.name));
 
+    // Show visible debug info in the dialog
+    const debugInfo = "Empfangen: " + files.length + " Dateien, " +
+                      "Bilder erkannt: " + imageFiles.length +
+                      (imageFiles.length > 0 ? " (1. Datei: " + imageFiles[0].name + ", Typ: " + (imageFiles[0].type||"leer") + ")" : "");
+    statusEl.textContent = debugInfo;
+    progressWrap.style.display = "block";
+    await new Promise(r => setTimeout(r, 300));
+
+    if(imageFiles.length === 0){
+      statusEl.textContent = "⚠️ Keine Bilddateien erkannt! Dateityp: " +
+        (files[0] ? (files[0].type || "kein Typ, Name: " + files[0].name) : "keine Dateien");
+      selectBtn.disabled = false;
+      selectBtn.textContent = "Nochmal versuchen";
+      return;
+    }
     statusEl.textContent = imageFiles.length + " Bilder gefunden, ordne zu...";
-    await new Promise(r => setTimeout(r, 50));
+    await new Promise(r => setTimeout(r, 100));
 
     const teaPhotoMap = new Map();
     const matched = [];
