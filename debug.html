@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teadrunk Debug</title>
+<style>
+  body { font-family: sans-serif; padding: 16px; background: #FAF9F5; }
+  h2 { color: #D97757; }
+  .photo { margin: 12px 0; padding: 12px; background: white; border-radius: 8px; border: 1px solid #E5E2D9; }
+  .photo img { max-width: 200px; max-height: 200px; display: block; margin-top: 8px; }
+  .meta { font-size: 12px; color: #87867F; word-break: break-all; }
+  .ok { color: green; }
+  .err { color: red; }
+  button { background: #D97757; color: white; border: none; padding: 10px 18px; border-radius: 999px; font-size: 15px; cursor: pointer; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<h2>🔍 Teadrunk Debug</h2>
+<button onclick="loadPhotos()">Fotos aus DB laden</button>
+<div id="output">Tippe auf den Button...</div>
+
+<script>
+async function loadPhotos() {
+  const out = document.getElementById('output');
+  out.innerHTML = 'Lade...';
+
+  try {
+    const db = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('teadrunk_db');
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = e => reject(e.target.error);
+    });
+
+    // Get all teas
+    const teas = await new Promise((resolve, reject) => {
+      const req = db.transaction('teas','readonly').objectStore('teas').getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+
+    // Get all photos
+    const photos = await new Promise((resolve, reject) => {
+      const req = db.transaction('photos','readonly').objectStore('photos').getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+
+    out.innerHTML = `<p class="ok">✓ ${teas.length} Tees, ${photos.length} Fotos in DB</p>`;
+
+    if (photos.length === 0) {
+      out.innerHTML += '<p class="err">Keine Fotos gespeichert!</p>';
+      return;
+    }
+
+    // Show first 3 photos with details
+    const sample = photos.slice(0, 3);
+    for (const p of sample) {
+      const tea = teas.find(t => t.id === p.teaId);
+      const dataURL = p.dataURL || '';
+      const prefix = dataURL.substring(0, 60);
+      const len = dataURL.length;
+      const isValid = dataURL.startsWith('data:image');
+
+      const div = document.createElement('div');
+      div.className = 'photo';
+      div.innerHTML = `
+        <strong>Foto ID: ${p.id}</strong><br>
+        <span class="meta">Tee: ${tea ? tea.name : 'unbekannt'} (id=${p.teaId})</span><br>
+        <span class="meta">dataURL prefix: <span class="${isValid ? 'ok' : 'err'}">${prefix}</span></span><br>
+        <span class="meta">Länge: ${len} Zeichen</span><br>
+        ${isValid
+          ? `<img src="${dataURL}" onerror="this.parentNode.innerHTML+='<span class=err>Bild konnte nicht geladen werden!</span>'">`
+          : '<span class="err">❌ Kein gültiges data:image/ Format!</span>'
+        }
+      `;
+      out.appendChild(div);
+    }
+
+    out.innerHTML += `<p class="meta">Zeige ${sample.length} von ${photos.length} Fotos</p>`;
+
+  } catch(e) {
+    out.innerHTML = `<span class="err">Fehler: ${e.message}</span>`;
+  }
+}
+</script>
+</body>
+</html>
