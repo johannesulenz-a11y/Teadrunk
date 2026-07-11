@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v2.9</title>
+<title>Teadrunk v3.0</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -358,6 +358,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
           </svg>
         </button>
         <button class="save-pill" id="save-pill" title="Auto-Speicher einrichten"></button>
+        <button class="icon-btn" id="btn-import-json" title="JSON-Datei laden" style="display:none;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3D3929" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
       </div>
 
       <div class="search-wrap">
@@ -440,6 +445,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <div class="gallery-dots" id="gallery-dots"></div>
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple style="display:none;">
+<input type="file" id="json-import-input" accept="application/json,.json" style="display:none;">
 <input type="file" id="import-photos-input" accept="image/*" multiple style="display:none;" webkitdirectory>
     <div class="thumb-strip" id="thumb-strip"></div>
 
@@ -552,7 +558,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v2.9</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.0</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -682,15 +688,18 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   // --- Save indicator pill ---
   function updateSavePill(){
     const pill = document.getElementById("save-pill");
+    const importBtn = document.getElementById("btn-import-json");
     if(!pill) return;
     if(_fileHandle){
       pill.textContent = "💾 " + (_fileHandle.name || FILE_NAME);
       pill.className = "save-pill has-file";
       pill.style.display = "inline-flex";
+      if(importBtn) importBtn.style.display = "none";
     } else {
       pill.textContent = "💾 Tippen";
       pill.className = "save-pill no-file";
       pill.style.display = "inline-flex";
+      if(importBtn) importBtn.style.display = "flex";
     }
   }
 
@@ -1157,7 +1166,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v2.9";
+  const APP_VERSION = "v3.0";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1213,6 +1222,13 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     document.getElementById("btn-add").addEventListener("click", createNewTea);
     document.getElementById("btn-export").addEventListener("click", exportToExcel);
     document.getElementById("btn-import-photos").addEventListener("click", openImportModal);
+    document.getElementById("btn-import-json").addEventListener("click", () => document.getElementById("json-import-input").click());
+    document.getElementById("json-import-input").addEventListener("change", async (e) => {
+      if(e.target.files && e.target.files[0]){
+        await importFromJSON(e.target.files[0]);
+      }
+      e.target.value = "";
+    });
     document.getElementById("import-photos-input").addEventListener("change", async (e) => {
       if(e.target.files && e.target.files.length > 0){
         await bulkImportPhotos(e.target.files);
@@ -2795,6 +2811,45 @@ const SEED_TEAS = [
 
     modal.style.display = "flex";
     requestAnimationFrame(() => modal.classList.add("show"));
+  }
+
+  async function importFromJSON(file){
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if(!data || !Array.isArray(data.teas)){
+        toast("⚠️ Ungültige JSON-Datei");
+        return;
+      }
+
+      // Clear existing data
+      const t1 = db.transaction(["teas","photos"],"readwrite");
+      t1.objectStore("teas").clear();
+      t1.objectStore("photos").clear();
+      await new Promise((res,rej)=>{ t1.oncomplete=res; t1.onerror=()=>rej(t1.error); });
+
+      // Import teas
+      if(data.teas.length){
+        const t2 = db.transaction("teas","readwrite");
+        const ts = t2.objectStore("teas");
+        for(const tea of data.teas) ts.put(tea);
+        await new Promise((res,rej)=>{ t2.oncomplete=res; t2.onerror=()=>rej(t2.error); });
+      }
+
+      // Import photos
+      if(data.photos && data.photos.length){
+        const t3 = db.transaction("photos","readwrite");
+        const ps = t3.objectStore("photos");
+        for(const photo of data.photos) ps.put(photo);
+        await new Promise((res,rej)=>{ t3.oncomplete=res; t3.onerror=()=>rej(t3.error); });
+      }
+
+      await loadTeasAndRender();
+      toast("✓ " + data.teas.length + " Tees geladen");
+    } catch(err){
+      console.error("JSON import error:", err);
+      toast("⚠️ Fehler beim Laden: " + err.message);
+    }
   }
 
   async function init(){
