@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.5</title>
+<title>Teadrunk v3.6</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -450,7 +450,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     <div class="thumb-strip" id="thumb-strip"></div>
 
     <div class="detail-body">
-      <input type="text" class="name-input" id="field-name" placeholder="Name des Tees">
+      <input type="text" class="name-input" id="field-name" placeholder="Name des Tees" inputmode="none">
       <div class="name-underline"></div>
       <div id="field-teacode-wrap" style="font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:12px;font-family:monospace;"></div>
 
@@ -558,7 +558,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.5</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.6</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1166,7 +1166,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v3.5";
+  const APP_VERSION = "v3.6";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1230,10 +1230,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       e.target.value = "";
     });
     document.getElementById("import-photos-input").addEventListener("change", async (e) => {
-      if(e.target.files && e.target.files.length > 0){
-        await bulkImportPhotos(e.target.files);
-      }
+      const files = Array.from(e.target.files || []);
       e.target.value = "";
+      if(files.length > 0){
+        await bulkImportPhotos(files);
+      }
     });
     document.getElementById("brand-logo").addEventListener("click", showVersionModal);
   }
@@ -1334,6 +1335,15 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     saveTimer = setTimeout(saveCurrentTea, 350);
   }
 
+  function setupNameFieldFocus(){
+    const nameInput = document.getElementById("field-name");
+    if(!nameInput) return;
+    nameInput.addEventListener("click", () => {
+      nameInput.removeAttribute("inputmode");
+      nameInput.focus();
+    });
+  }
+
   async function saveCurrentTea(){
     if(!currentTeaId) return;
     const t = await dbGet("teas", currentTeaId);
@@ -1368,6 +1378,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       }
     });
 
+    setupNameFieldFocus();
     document.getElementById("btn-delete-tea").addEventListener("click", async () => {
       if(!currentTeaId) return;
       const t = await dbGet("teas", currentTeaId);
@@ -2658,7 +2669,7 @@ const SEED_TEAS = [
     console.log("Import: teas in DB:", teas.length);
 
     // Accept images by MIME type OR by extension (for Android)
-    const imageFiles = Array.from(files).filter(f =>
+    const imageFiles = (Array.isArray(files) ? files : Array.from(files)).filter(f =>
       f.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|heic)$/i.test(f.name)
     );
     console.log("Import: image files:", imageFiles.length, imageFiles.slice(0,3).map(f=>f.name));
