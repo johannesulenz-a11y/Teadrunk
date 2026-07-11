@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.0</title>
+<title>Teadrunk v3.2</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -558,7 +558,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.0</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.2</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1166,7 +1166,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v3.0";
+  const APP_VERSION = "v3.2";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1540,60 +1540,53 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     renderThumbStrip();
   }
 
-  function arrayBufferToBase64(buffer){
-    // Safe chunk-based conversion that works on Android for large files
-    const bytes = new Uint8Array(buffer);
-    const chunkSize = 4096; // smaller chunks = safer on Android
-    let binary = '';
-    for(let i = 0; i < bytes.length; i += chunkSize){
-      const end = Math.min(i + chunkSize, bytes.length);
-      for(let j = i; j < end; j++){
-        binary += String.fromCharCode(bytes[j]);
-      }
-    }
-    return btoa(binary);
+  function detectMimeType(bytes){
+    if(bytes[0]===0xFF && bytes[1]===0xD8) return "image/jpeg";
+    if(bytes[0]===0x89 && bytes[1]===0x50) return "image/png";
+    if(bytes[0]===0x47 && bytes[1]===0x49) return "image/gif";
+    if(bytes[0]===0x52 && bytes[1]===0x49) return "image/webp";
+    if(bytes[0]===0x00 && bytes[4]===0x66) return "image/heic";
+    return "image/jpeg"; // default
   }
 
   function resizeImageFile(file){
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try{
-          const arrayBuffer = e.target.result;
-          const bytes = new Uint8Array(arrayBuffer);
+      // Step 1: Read first 12 bytes to detect MIME type
+      const headerReader = new FileReader();
+      headerReader.onload = (e) => {
+        const bytes = new Uint8Array(e.target.result);
+        const mimeType = detectMimeType(bytes);
 
-          // Detect image type from magic bytes
-          let mimeType = 'image/jpeg';
-          if(bytes[0] === 0x89 && bytes[1] === 0x50) mimeType = 'image/png';
-          else if(bytes[0] === 0x47 && bytes[1] === 0x49) mimeType = 'image/gif';
-          else if(bytes[0] === 0x52 && bytes[1] === 0x49) mimeType = 'image/webp';
+        // Step 2: Create blob with correct MIME type so canvas can decode it
+        const typedBlob = new Blob([file], {type: mimeType});
+        const objectURL = URL.createObjectURL(typedBlob);
 
-          const base64 = arrayBufferToBase64(arrayBuffer);
-          const src = 'data:' + mimeType + ';base64,' + base64;
-
-          const img = new Image();
-          img.onload = () => {
-            let w = img.width, hh = img.height;
-            if(!w || !hh){ resolve(src); return; }
-            if(w > MAX_PHOTO_DIM || hh > MAX_PHOTO_DIM){
-              if(w > hh){ hh = Math.round(hh * MAX_PHOTO_DIM/w); w = MAX_PHOTO_DIM; }
-              else { w = Math.round(w * MAX_PHOTO_DIM/hh); hh = MAX_PHOTO_DIM; }
-            }
-            const canvas = document.createElement("canvas");
-            canvas.width = w; canvas.height = hh;
-            canvas.getContext("2d").drawImage(img, 0, 0, w, hh);
-            resolve(canvas.toDataURL("image/jpeg", 0.85));
-          };
-          img.onerror = function(){
-            resolve(src); // store raw if canvas fails
-          };
-          img.src = src;
-        } catch(err){
-          reject(err);
-        }
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(objectURL);
+          let w = img.width, hh = img.height;
+          if(!w || !hh){
+            // Image loaded but has no dimensions — store as-is via canvas trick
+            resolve("data:" + mimeType + ";base64,");
+            return;
+          }
+          if(w > MAX_PHOTO_DIM || hh > MAX_PHOTO_DIM){
+            if(w > hh){ hh = Math.round(hh * MAX_PHOTO_DIM/w); w = MAX_PHOTO_DIM; }
+            else { w = Math.round(w * MAX_PHOTO_DIM/hh); hh = MAX_PHOTO_DIM; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = hh;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, hh);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+        img.onerror = function(){
+          URL.revokeObjectURL(objectURL);
+          reject(new Error("Image failed to load: " + file.name + " (mime: " + mimeType + ")"));
+        };
+        img.src = objectURL;
       };
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
+      headerReader.onerror = reject;
+      headerReader.readAsArrayBuffer(file.slice(0, 12));
     });
   }
 
@@ -2731,28 +2724,8 @@ const SEED_TEAS = [
           done++;
         } catch(e){
           console.error("Photo error:", file.name, e.message || e);
-          // Try storing raw file as fallback
-          try{
-            const raw = await new Promise((res, rej) => {
-              const r = new FileReader();
-              r.onload = ev => res(ev.target.result);
-              r.onerror = rej;
-              r.readAsDataURL(file);
-            });
-            const photoObj = {teaId, dataURL: raw, order: order++};
-            const newId = await dbPut("photos", photoObj);
-            if(isFirst){
-              const tea = await dbGet("teas", teaId);
-              if(tea){ tea.mainPhotoId = newId; await dbPut("teas", tea); }
-              isFirst = false;
-            }
-            done++;
-            console.log("Saved raw fallback for", file.name);
-          } catch(e2){
-            console.error("Fallback also failed:", file.name, e2);
-            errors++;
-            done++;
-          }
+          errors++;
+          done++;
         }
         progressBar.style.width = Math.round(done/total*100) + "%";
         statusEl.textContent = done + " / " + total + " Bilder gespeichert...";
