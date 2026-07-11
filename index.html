@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.3</title>
+<title>Teadrunk v3.5</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -558,7 +558,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.3</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.5</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1166,7 +1166,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v3.3";
+  const APP_VERSION = "v3.5";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1540,61 +1540,45 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     renderThumbStrip();
   }
 
-  function detectMimeType(bytes){
-    if(bytes[0]===0xFF && bytes[1]===0xD8) return "image/jpeg";
-    if(bytes[0]===0x89 && bytes[1]===0x50) return "image/png";
-    if(bytes[0]===0x47 && bytes[1]===0x49) return "image/gif";
-    if(bytes[0]===0x52 && bytes[1]===0x49) return "image/webp";
-    if(bytes[0]===0x00 && bytes[4]===0x66) return "image/heic";
-    return "image/jpeg"; // default
-  }
-
   function resizeImageFile(file){
     return new Promise((resolve, reject) => {
-      // Step 1: Read first 12 bytes to detect MIME type
-      const headerReader = new FileReader();
-      headerReader.onload = (e) => {
-        const bytes = new Uint8Array(e.target.result);
-        const mimeType = detectMimeType(bytes);
-
-        // Step 2: Create blob with correct MIME type so canvas can decode it
-        const typedBlob = new Blob([file], {type: mimeType});
-        const objectURL = URL.createObjectURL(typedBlob);
-
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // If no resize needed, return directly
+        const dataURL = e.target.result;
+        if(!dataURL || !dataURL.startsWith('data:')) {
+          reject(new Error('Invalid data URL'));
+          return;
+        }
+        // Resize via canvas if image is too large
         const img = new Image();
         img.onload = () => {
-          URL.revokeObjectURL(objectURL);
           let w = img.width, hh = img.height;
-          if(!w || !hh){
-            // Image loaded but has no dimensions — store as-is via canvas trick
-            resolve("data:" + mimeType + ";base64,");
+          if(w <= MAX_PHOTO_DIM && hh <= MAX_PHOTO_DIM) {
+            resolve(dataURL); // already small enough
             return;
           }
-          if(w > MAX_PHOTO_DIM || hh > MAX_PHOTO_DIM){
-            if(w > hh){ hh = Math.round(hh * MAX_PHOTO_DIM/w); w = MAX_PHOTO_DIM; }
-            else { w = Math.round(w * MAX_PHOTO_DIM/hh); hh = MAX_PHOTO_DIM; }
-          }
-          const canvas = document.createElement("canvas");
+          if(w > hh){ hh = Math.round(hh * MAX_PHOTO_DIM/w); w = MAX_PHOTO_DIM; }
+          else { w = Math.round(w * MAX_PHOTO_DIM/hh); hh = MAX_PHOTO_DIM; }
+          const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = hh;
-          canvas.getContext("2d").drawImage(img, 0, 0, w, hh);
-          resolve(canvas.toDataURL("image/jpeg", 0.72));
+          canvas.getContext('2d').drawImage(img, 0, 0, w, hh);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
         };
-        img.onerror = function(){
-          URL.revokeObjectURL(objectURL);
-          reject(new Error("Image failed to load: " + file.name + " (mime: " + mimeType + ")"));
-        };
-        img.src = objectURL;
+        img.onerror = () => resolve(dataURL); // if canvas fails, use original
+        img.src = dataURL;
       };
-      headerReader.onerror = reject;
-      headerReader.readAsArrayBuffer(file.slice(0, 12));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
   }
 
-  async function handlePhotoFiles(files){
+    async function handlePhotoFiles(files){
     if(!currentTeaId || !files || !files.length) return;
+    const fileList = Array.isArray(files) ? files : Array.from(files);
     const existing = await dbGetPhotosForTea(currentTeaId);
     let order = existing.length ? Math.max(...existing.map(p=>p.order||0))+1 : 0;
-    for(const file of Array.from(files)){
+    for(const file of fileList){
       try{
         const dataURL = await resizeImageFile(file);
         const photoObj = {teaId: currentTeaId, dataURL, order: order++};
@@ -1617,9 +1601,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     document.getElementById("gallery-prev").addEventListener("click", () => goToSlide(currentSlide-1, true));
     document.getElementById("gallery-next").addEventListener("click", () => goToSlide(currentSlide+1, true));
     document.getElementById("gallery-add").addEventListener("click", () => document.getElementById("photo-input").click());
-    document.getElementById("photo-input").addEventListener("change", (e) => {
-      handlePhotoFiles(e.target.files);
+    document.getElementById("photo-input").addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
       e.target.value = "";
+      if(files.length) await handlePhotoFiles(files);
     });
 
     // Touch-Swipe
