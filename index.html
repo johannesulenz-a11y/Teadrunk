@@ -3,14 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v2.1</title>
-<link rel="manifest" href="manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Teadrunk">
-<meta name="theme-color" content="#FAF9F5">
-<link rel="apple-touch-icon" href="icon-apple-touch.png">
+<title>Teadrunk v2.2</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -446,6 +439,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     <div class="detail-body">
       <input type="text" class="name-input" id="field-name" placeholder="Name des Tees">
       <div class="name-underline"></div>
+      <div id="field-teacode-wrap" style="font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:12px;font-family:monospace;"></div>
 
       <div class="card">
         <div class="field">
@@ -551,7 +545,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v2.1</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v2.2</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
@@ -1156,7 +1150,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v2.1";
+  const APP_VERSION = "v2.2";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1240,10 +1234,21 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     }
   });
 
+  async function generateNextCode(){
+    const teas = await dbGetAll("teas");
+    const codes = teas
+      .map(t => t.teaCode)
+      .filter(c => c && /^TD\d+$/.test(c))
+      .map(c => parseInt(c.replace("TD",""), 10));
+    const max = codes.length ? Math.max(...codes) : 0;
+    return "TD" + String(max + 1).padStart(3, "0");
+  }
+
   async function createNewTea(){
     const newTea = {
       name: "", originalName: "", teesorte: "", typ: "", herkunftsland: "", bewertung: 0,
       notizen: "", status: "Gekauft", gekauftBei: "", preis: 0, mainPhotoId: null,
+      teaCode: await generateNextCode(),
       createdAt: Date.now(), updatedAt: Date.now()
     };
     const id = await dbPut("teas", newTea);
@@ -1257,6 +1262,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     if(!t) return;
 
     document.getElementById("field-name").value = t.name || "";
+    const codeWrap = document.getElementById("field-teacode-wrap");
+    if(codeWrap) codeWrap.textContent = t.teaCode ? t.teaCode : "";
     fillSelect(document.getElementById("field-teesorte"), TEESORTEN, "– wählen –");
     document.getElementById("field-teesorte").value = t.teesorte || "";
     fillSelect(document.getElementById("field-herkunft"), HERKUNFTSLAENDER, "– wählen –");
@@ -1619,7 +1626,8 @@ const SEED_TEAS = [
     "preis": 276.0,
     "mainPhotoId": null,
     "createdAt": 1783575723679,
-    "updatedAt": 1783575723679
+    "updatedAt": 1783575723679,
+    "teaCode": "TD001"
   },
   {
     "id": 2,
@@ -1635,7 +1643,8 @@ const SEED_TEAS = [
     "preis": 138.0,
     "mainPhotoId": null,
     "createdAt": 1783575724679,
-    "updatedAt": 1783575724679
+    "updatedAt": 1783575724679,
+    "teaCode": "TD002"
   },
   {
     "id": 3,
@@ -1651,7 +1660,8 @@ const SEED_TEAS = [
     "preis": 147.0,
     "mainPhotoId": null,
     "createdAt": 1783575725679,
-    "updatedAt": 1783575725679
+    "updatedAt": 1783575725679,
+    "teaCode": "TD003"
   },
   {
     "id": 4,
@@ -1667,7 +1677,8 @@ const SEED_TEAS = [
     "preis": 97.0,
     "mainPhotoId": null,
     "createdAt": 1783575726679,
-    "updatedAt": 1783575726679
+    "updatedAt": 1783575726679,
+    "teaCode": "TD004"
   },
   {
     "id": 5,
@@ -1683,7 +1694,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575727679,
-    "updatedAt": 1783575727679
+    "updatedAt": 1783575727679,
+    "teaCode": "TD005"
   },
   {
     "id": 6,
@@ -1699,7 +1711,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575728679,
-    "updatedAt": 1783575728679
+    "updatedAt": 1783575728679,
+    "teaCode": "TD006"
   },
   {
     "id": 7,
@@ -1715,7 +1728,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575729679,
-    "updatedAt": 1783575729679
+    "updatedAt": 1783575729679,
+    "teaCode": "TD007"
   },
   {
     "id": 8,
@@ -1731,7 +1745,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575730679,
-    "updatedAt": 1783575730679
+    "updatedAt": 1783575730679,
+    "teaCode": "TD008"
   },
   {
     "id": 9,
@@ -1747,7 +1762,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575731679,
-    "updatedAt": 1783575731679
+    "updatedAt": 1783575731679,
+    "teaCode": "TD009"
   },
   {
     "id": 10,
@@ -1763,7 +1779,8 @@ const SEED_TEAS = [
     "preis": 10.6,
     "mainPhotoId": null,
     "createdAt": 1783575732679,
-    "updatedAt": 1783575732679
+    "updatedAt": 1783575732679,
+    "teaCode": "TD010"
   },
   {
     "id": 11,
@@ -1779,7 +1796,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575733679,
-    "updatedAt": 1783575733679
+    "updatedAt": 1783575733679,
+    "teaCode": "TD011"
   },
   {
     "id": 12,
@@ -1795,7 +1813,8 @@ const SEED_TEAS = [
     "preis": 10.35,
     "mainPhotoId": null,
     "createdAt": 1783575734679,
-    "updatedAt": 1783575734679
+    "updatedAt": 1783575734679,
+    "teaCode": "TD012"
   },
   {
     "id": 13,
@@ -1811,7 +1830,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575735679,
-    "updatedAt": 1783575735679
+    "updatedAt": 1783575735679,
+    "teaCode": "TD013"
   },
   {
     "id": 14,
@@ -1827,7 +1847,8 @@ const SEED_TEAS = [
     "preis": 32.0,
     "mainPhotoId": null,
     "createdAt": 1783575736679,
-    "updatedAt": 1783575736679
+    "updatedAt": 1783575736679,
+    "teaCode": "TD014"
   },
   {
     "id": 15,
@@ -1843,7 +1864,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575737679,
-    "updatedAt": 1783575737679
+    "updatedAt": 1783575737679,
+    "teaCode": "TD015"
   },
   {
     "id": 16,
@@ -1859,7 +1881,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575738679,
-    "updatedAt": 1783575738679
+    "updatedAt": 1783575738679,
+    "teaCode": "TD016"
   },
   {
     "id": 17,
@@ -1875,7 +1898,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575739679,
-    "updatedAt": 1783575739679
+    "updatedAt": 1783575739679,
+    "teaCode": "TD017"
   },
   {
     "id": 18,
@@ -1891,7 +1915,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575740679,
-    "updatedAt": 1783575740679
+    "updatedAt": 1783575740679,
+    "teaCode": "TD018"
   },
   {
     "id": 19,
@@ -1907,7 +1932,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575741679,
-    "updatedAt": 1783575741679
+    "updatedAt": 1783575741679,
+    "teaCode": "TD019"
   },
   {
     "id": 20,
@@ -1923,7 +1949,8 @@ const SEED_TEAS = [
     "preis": 623.0,
     "mainPhotoId": null,
     "createdAt": 1783575742679,
-    "updatedAt": 1783575742679
+    "updatedAt": 1783575742679,
+    "teaCode": "TD020"
   },
   {
     "id": 21,
@@ -1939,7 +1966,8 @@ const SEED_TEAS = [
     "preis": 238.0,
     "mainPhotoId": null,
     "createdAt": 1783575743679,
-    "updatedAt": 1783575743679
+    "updatedAt": 1783575743679,
+    "teaCode": "TD021"
   },
   {
     "id": 22,
@@ -1955,7 +1983,8 @@ const SEED_TEAS = [
     "preis": 278.0,
     "mainPhotoId": null,
     "createdAt": 1783575744679,
-    "updatedAt": 1783575744679
+    "updatedAt": 1783575744679,
+    "teaCode": "TD022"
   },
   {
     "id": 23,
@@ -1971,7 +2000,8 @@ const SEED_TEAS = [
     "preis": 139.0,
     "mainPhotoId": null,
     "createdAt": 1783575745679,
-    "updatedAt": 1783575745679
+    "updatedAt": 1783575745679,
+    "teaCode": "TD023"
   },
   {
     "id": 24,
@@ -1987,7 +2017,8 @@ const SEED_TEAS = [
     "preis": 211.0,
     "mainPhotoId": null,
     "createdAt": 1783575746679,
-    "updatedAt": 1783575746679
+    "updatedAt": 1783575746679,
+    "teaCode": "TD024"
   },
   {
     "id": 25,
@@ -2003,7 +2034,8 @@ const SEED_TEAS = [
     "preis": 123.0,
     "mainPhotoId": null,
     "createdAt": 1783575747679,
-    "updatedAt": 1783575747679
+    "updatedAt": 1783575747679,
+    "teaCode": "TD025"
   },
   {
     "id": 26,
@@ -2019,7 +2051,8 @@ const SEED_TEAS = [
     "preis": 295.0,
     "mainPhotoId": null,
     "createdAt": 1783575748679,
-    "updatedAt": 1783575748679
+    "updatedAt": 1783575748679,
+    "teaCode": "TD026"
   },
   {
     "id": 27,
@@ -2035,7 +2068,8 @@ const SEED_TEAS = [
     "preis": 745.0,
     "mainPhotoId": null,
     "createdAt": 1783575749679,
-    "updatedAt": 1783575749679
+    "updatedAt": 1783575749679,
+    "teaCode": "TD027"
   },
   {
     "id": 28,
@@ -2051,7 +2085,8 @@ const SEED_TEAS = [
     "preis": 16.48,
     "mainPhotoId": null,
     "createdAt": 1783575750679,
-    "updatedAt": 1783575750679
+    "updatedAt": 1783575750679,
+    "teaCode": "TD028"
   },
   {
     "id": 29,
@@ -2067,7 +2102,8 @@ const SEED_TEAS = [
     "preis": 17.14,
     "mainPhotoId": null,
     "createdAt": 1783575751679,
-    "updatedAt": 1783575751679
+    "updatedAt": 1783575751679,
+    "teaCode": "TD029"
   },
   {
     "id": 30,
@@ -2083,7 +2119,8 @@ const SEED_TEAS = [
     "preis": 29.03,
     "mainPhotoId": null,
     "createdAt": 1783575752679,
-    "updatedAt": 1783575752679
+    "updatedAt": 1783575752679,
+    "teaCode": "TD030"
   },
   {
     "id": 31,
@@ -2099,7 +2136,8 @@ const SEED_TEAS = [
     "preis": 60.76,
     "mainPhotoId": null,
     "createdAt": 1783575753679,
-    "updatedAt": 1783575753679
+    "updatedAt": 1783575753679,
+    "teaCode": "TD031"
   },
   {
     "id": 32,
@@ -2115,7 +2153,8 @@ const SEED_TEAS = [
     "preis": 8.24,
     "mainPhotoId": null,
     "createdAt": 1783575754679,
-    "updatedAt": 1783575754679
+    "updatedAt": 1783575754679,
+    "teaCode": "TD032"
   },
   {
     "id": 33,
@@ -2131,7 +2170,8 @@ const SEED_TEAS = [
     "preis": 8.24,
     "mainPhotoId": null,
     "createdAt": 1783575755679,
-    "updatedAt": 1783575755679
+    "updatedAt": 1783575755679,
+    "teaCode": "TD033"
   },
   {
     "id": 34,
@@ -2147,7 +2187,8 @@ const SEED_TEAS = [
     "preis": 8.24,
     "mainPhotoId": null,
     "createdAt": 1783575756679,
-    "updatedAt": 1783575756679
+    "updatedAt": 1783575756679,
+    "teaCode": "TD034"
   },
   {
     "id": 35,
@@ -2163,7 +2204,8 @@ const SEED_TEAS = [
     "preis": 8.24,
     "mainPhotoId": null,
     "createdAt": 1783575757679,
-    "updatedAt": 1783575757679
+    "updatedAt": 1783575757679,
+    "teaCode": "TD035"
   },
   {
     "id": 36,
@@ -2179,7 +2221,8 @@ const SEED_TEAS = [
     "preis": 95.48,
     "mainPhotoId": null,
     "createdAt": 1783575758679,
-    "updatedAt": 1783575758679
+    "updatedAt": 1783575758679,
+    "teaCode": "TD036"
   },
   {
     "id": 37,
@@ -2195,7 +2238,8 @@ const SEED_TEAS = [
     "preis": 79.85,
     "mainPhotoId": null,
     "createdAt": 1783575759679,
-    "updatedAt": 1783575759679
+    "updatedAt": 1783575759679,
+    "teaCode": "TD037"
   },
   {
     "id": 38,
@@ -2211,7 +2255,8 @@ const SEED_TEAS = [
     "preis": 8.97,
     "mainPhotoId": null,
     "createdAt": 1783575760679,
-    "updatedAt": 1783575760679
+    "updatedAt": 1783575760679,
+    "teaCode": "TD038"
   },
   {
     "id": 39,
@@ -2227,7 +2272,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575761679,
-    "updatedAt": 1783575761679
+    "updatedAt": 1783575761679,
+    "teaCode": "TD039"
   },
   {
     "id": 40,
@@ -2243,7 +2289,8 @@ const SEED_TEAS = [
     "preis": 171.24,
     "mainPhotoId": null,
     "createdAt": 1783575762679,
-    "updatedAt": 1783575762679
+    "updatedAt": 1783575762679,
+    "teaCode": "TD040"
   },
   {
     "id": 41,
@@ -2259,7 +2306,8 @@ const SEED_TEAS = [
     "preis": 20.15,
     "mainPhotoId": null,
     "createdAt": 1783575763679,
-    "updatedAt": 1783575763679
+    "updatedAt": 1783575763679,
+    "teaCode": "TD041"
   },
   {
     "id": 42,
@@ -2275,7 +2323,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575764679,
-    "updatedAt": 1783575764679
+    "updatedAt": 1783575764679,
+    "teaCode": "TD042"
   },
   {
     "id": 43,
@@ -2291,7 +2340,8 @@ const SEED_TEAS = [
     "preis": 66.26,
     "mainPhotoId": null,
     "createdAt": 1783575765679,
-    "updatedAt": 1783575765679
+    "updatedAt": 1783575765679,
+    "teaCode": "TD043"
   },
   {
     "id": 44,
@@ -2307,7 +2357,8 @@ const SEED_TEAS = [
     "preis": 10.37,
     "mainPhotoId": null,
     "createdAt": 1783575766679,
-    "updatedAt": 1783575766679
+    "updatedAt": 1783575766679,
+    "teaCode": "TD044"
   },
   {
     "id": 45,
@@ -2323,7 +2374,8 @@ const SEED_TEAS = [
     "preis": 19.42,
     "mainPhotoId": null,
     "createdAt": 1783575767679,
-    "updatedAt": 1783575767679
+    "updatedAt": 1783575767679,
+    "teaCode": "TD045"
   },
   {
     "id": 46,
@@ -2339,7 +2391,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575768679,
-    "updatedAt": 1783575768679
+    "updatedAt": 1783575768679,
+    "teaCode": "TD046"
   },
   {
     "id": 47,
@@ -2355,7 +2408,8 @@ const SEED_TEAS = [
     "preis": 133.0,
     "mainPhotoId": null,
     "createdAt": 1783575769679,
-    "updatedAt": 1783575769679
+    "updatedAt": 1783575769679,
+    "teaCode": "TD047"
   },
   {
     "id": 48,
@@ -2371,7 +2425,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575770679,
-    "updatedAt": 1783575770679
+    "updatedAt": 1783575770679,
+    "teaCode": "TD048"
   },
   {
     "id": 49,
@@ -2387,7 +2442,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575771679,
-    "updatedAt": 1783575771679
+    "updatedAt": 1783575771679,
+    "teaCode": "TD049"
   },
   {
     "id": 50,
@@ -2403,7 +2459,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575772679,
-    "updatedAt": 1783575772679
+    "updatedAt": 1783575772679,
+    "teaCode": "TD050"
   },
   {
     "id": 51,
@@ -2419,7 +2476,8 @@ const SEED_TEAS = [
     "preis": 0,
     "mainPhotoId": null,
     "createdAt": 1783575773679,
-    "updatedAt": 1783575773679
+    "updatedAt": 1783575773679,
+    "teaCode": "TD051"
   },
   {
     "id": 52,
@@ -2435,7 +2493,8 @@ const SEED_TEAS = [
     "preis": 15.71,
     "mainPhotoId": null,
     "createdAt": 1783575774679,
-    "updatedAt": 1783575774679
+    "updatedAt": 1783575774679,
+    "teaCode": "TD052"
   },
   {
     "id": 53,
@@ -2451,7 +2510,8 @@ const SEED_TEAS = [
     "preis": 15.71,
     "mainPhotoId": null,
     "createdAt": 1783575775679,
-    "updatedAt": 1783575775679
+    "updatedAt": 1783575775679,
+    "teaCode": "TD053"
   },
   {
     "id": 54,
@@ -2467,7 +2527,8 @@ const SEED_TEAS = [
     "preis": 15.71,
     "mainPhotoId": null,
     "createdAt": 1783575776679,
-    "updatedAt": 1783575776679
+    "updatedAt": 1783575776679,
+    "teaCode": "TD054"
   },
   {
     "id": 55,
@@ -2483,7 +2544,8 @@ const SEED_TEAS = [
     "preis": 111.11,
     "mainPhotoId": null,
     "createdAt": 1783575777679,
-    "updatedAt": 1783575777679
+    "updatedAt": 1783575777679,
+    "teaCode": "TD055"
   }
 ];
 
@@ -2511,39 +2573,36 @@ const SEED_TEAS = [
   }
 
   function findTeaForFilename(filename, teas){
-    // Remove extension
-    const base = filename.replace(/\.[^.]+$/, '');
-    const normalBase = normalizeName(base);
+    const base = filename.replace(/\.[^.]+$/, '').replace(/_\d+$/, '');
 
+    // Primary: match by teaCode (TD001, TD001_1 etc.)
+    const codeMatch = base.match(/^(TD\d+)/i);
+    if(codeMatch){
+      const code = codeMatch[1].toUpperCase();
+      const tea = teas.find(t => t.teaCode && t.teaCode.toUpperCase() === code);
+      if(tea) return tea;
+    }
+
+    // Fallback: fuzzy name match
+    const normalBase = normalizeName(base);
     let bestMatch = null;
     let bestScore = 0;
 
     for(const tea of teas){
       if(!tea.name) continue;
       const normalTea = normalizeName(tea.name);
-
-      // Exact match
       if(normalBase === normalTea) return tea;
-
-      // Check if filename starts with tea name (handles _1, _2 suffixes)
       if(normalBase.startsWith(normalTea) && normalTea.length > bestScore){
-        bestMatch = tea;
-        bestScore = normalTea.length;
+        bestMatch = tea; bestScore = normalTea.length;
       }
-      // Check if tea name starts with filename base
       if(normalTea.startsWith(normalBase) && normalTea.length > bestScore){
-        bestMatch = tea;
-        bestScore = normalTea.length;
+        bestMatch = tea; bestScore = normalTea.length;
       }
-      // Word overlap score
       const teaWords = normalTea.split(' ').filter(w => w.length > 2);
       const baseWords = normalBase.split(' ').filter(w => w.length > 2);
       const overlap = teaWords.filter(w => baseWords.includes(w)).length;
       const score = overlap * 10 + (overlap > 0 ? Math.min(normalTea.length, normalBase.length) : 0);
-      if(score > bestScore && overlap >= 2){
-        bestScore = score;
-        bestMatch = tea;
-      }
+      if(score > bestScore && overlap >= 2){ bestScore = score; bestMatch = tea; }
     }
     return bestMatch;
   }
@@ -2563,10 +2622,18 @@ const SEED_TEAS = [
     resultsEl.style.display = "none";
 
     const teas = await dbGetAll("teas");
-    const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+    console.log("Import: teas in DB:", teas.length);
 
-    // Group files by tea
-    const teaPhotoMap = new Map(); // teaId → [files]
+    // Accept images by MIME type OR by extension (for Android)
+    const imageFiles = Array.from(files).filter(f =>
+      f.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|heic)$/i.test(f.name)
+    );
+    console.log("Import: image files:", imageFiles.length, imageFiles.slice(0,3).map(f=>f.name));
+
+    statusEl.textContent = imageFiles.length + " Bilder gefunden, ordne zu...";
+    await new Promise(r => setTimeout(r, 50));
+
+    const teaPhotoMap = new Map();
     const matched = [];
     const unmatched = [];
 
@@ -2581,10 +2648,12 @@ const SEED_TEAS = [
       }
     }
 
-    statusEl.textContent = `${matched.length} Bilder zugeordnet, ${unmatched.length} nicht erkannt`;
+    console.log("Import matched:", matched.length, "unmatched:", unmatched.length);
+    statusEl.textContent = matched.length + " zugeordnet, speichere...";
+    await new Promise(r => setTimeout(r, 50));
 
-    // Process and save photos
     let done = 0;
+    let errors = 0;
     const total = matched.length;
 
     for(const [teaId, photoFiles] of teaPhotoMap){
@@ -2597,49 +2666,54 @@ const SEED_TEAS = [
           const dataURL = await resizeImageFile(file);
           const photoObj = {teaId, dataURL, order: order++};
           const newId = await dbPut("photos", photoObj);
+          console.log("Saved photo", newId, "for tea", teaId);
 
-          // Set as main photo if first
           if(isFirst){
             const tea = await dbGet("teas", teaId);
-            tea.mainPhotoId = newId;
-            await dbPut("teas", tea);
+            if(tea){ tea.mainPhotoId = newId; await dbPut("teas", tea); }
             isFirst = false;
           }
-        } catch(e){ console.warn("Photo error:", e); }
-
-        done++;
+          done++;
+        } catch(e){
+          console.error("Photo error:", file.name, e);
+          errors++;
+          done++;
+        }
         progressBar.style.width = Math.round(done/total*100) + "%";
-        statusEl.textContent = `${done} / ${total} Bilder importiert…`;
-        await new Promise(r => setTimeout(r, 10)); // UI update
+        statusEl.textContent = done + " / " + total + " Bilder gespeichert...";
+        await new Promise(r => setTimeout(r, 5));
       }
     }
 
-    // Show results
+    const allPhotos = await dbGetAll("photos");
+    console.log("Total photos in DB after import:", allPhotos.length);
+
     progressWrap.style.display = "none";
     resultsEl.style.display = "block";
 
+    const savedCount = done - errors;
     matchedEl.innerHTML = matched.length
-      ? "<strong>✓ Zugeordnet:</strong><br>" + matched.map(m => `${m.file} → ${m.tea}`).join("<br>")
+      ? "<strong>Gespeichert: " + savedCount + " Bilder</strong><br>" +
+        matched.map(function(m){ return m.file + " → " + m.tea; }).join("<br>")
       : "";
 
     unmatchedEl.innerHTML = unmatched.length
-      ? "<strong>Nicht erkannt:</strong><br>" + unmatched.join("<br>")
+      ? "<br><strong>Nicht erkannt (" + unmatched.length + "):</strong><br>" + unmatched.join("<br>")
       : "";
 
-    // Update button to close
     selectBtn.textContent = "Fertig";
     selectBtn.disabled = false;
-    selectBtn.onclick = () => {
+    selectBtn.onclick = async function(){
       modal.classList.remove("show");
-      setTimeout(()=>modal.style.display="none", 180);
-      loadTeasAndRender();
-      scheduleSaveToFile();
+      setTimeout(function(){ modal.style.display="none"; }, 180);
+      await loadTeasAndRender();
+      await saveToFile();
     };
 
-    toast(`✓ ${done} Bilder importiert`);
+    toast("Gespeichert: " + savedCount + " Bilder");
   }
 
-  function openImportModal(){
+    function openImportModal(){
     const modal = document.getElementById("import-modal");
     const progressWrap = document.getElementById("import-progress");
     const resultsEl = document.getElementById("import-results");
@@ -2651,7 +2725,7 @@ const SEED_TEAS = [
     progressWrap.style.display = "none";
     resultsEl.style.display = "none";
     progressBar.style.width = "0%";
-    selectBtn.textContent = "Ordner wählen";
+    selectBtn.textContent = "Bilder auswählen";
     selectBtn.disabled = false;
     selectBtn.onclick = () => document.getElementById("import-photos-input").click();
 
