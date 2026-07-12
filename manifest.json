@@ -5,7 +5,7 @@
   "description": "Deine persönliche Tee-Sammlung",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#FAF9F5",
   "theme_color": "#FAF9F5",
