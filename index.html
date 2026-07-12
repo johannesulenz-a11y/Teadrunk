@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.18</title>
+<title>Teadrunk v3.19</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -398,9 +398,9 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
           </svg>
         </button>
         <button class="save-pill" id="save-pill" title="Auto-Speicher einrichten"></button>
-        <button class="icon-btn" id="btn-import-json" title="JSON-Datei laden" style="display:none;">
+        <button class="icon-btn" id="btn-import-json" title="Daten laden" style="display:none;">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3D3929" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
           </svg>
         </button>
       </div>
@@ -434,7 +434,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
           <tr>
             <th data-key="name">Name<span class="arrow">▲</span></th>
             <th data-key="teesorte">Teesorte<span class="arrow">▲</span></th>
-            <th data-key="bewertung">Bewertung<span class="arrow">▲</span></th>
+            <th data-key="bewertung">Note<span class="arrow">▲</span></th>
           </tr>
         </thead>
         <tbody id="tea-tbody"></tbody>
@@ -498,7 +498,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 
       <div class="card">
         <div class="field">
-          <label>Bewertung</label>
+          <label>Note</label>
           <div class="stars" id="stars-widget"></div>
         </div>
         <div class="field-row">
@@ -582,7 +582,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.18</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.19</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -1097,7 +1097,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       tdRating.className = "col-rating";
       tdRating.style.cssText = "text-align:center;font-size:13px;color:var(--muted);white-space:nowrap;";
       tdRating.innerHTML = t.bewertung > 0
-        ? `<span style="color:var(--terracotta);font-weight:600;">${t.bewertung.toFixed(1)}</span> <span style="font-size:11px;">★</span>`
+        ? `<span style="color:var(--terracotta);font-weight:600;">${t.bewertung.toFixed(1)}</span>`
         : "–";
 
       tr.appendChild(tdName);
@@ -1140,7 +1140,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     if(!XLSX){ toast("Exportfunktion nicht verfügbar"); return; }
 
     // Tabellenblatt: alle Tees
-    const headers = ["Name","Originalname","Typ","Teesorte","Herkunftsland","Status","Bewertung","Preis/kg (€)","Gekauft bei","Notizen","Erstellt","Aktualisiert"];
+    const headers = ["Name","Originalname","Typ","Teesorte","Herkunftsland","Status","Note","Preis/kg (€)","Gekauft bei","Notizen","Erstellt","Aktualisiert"];
     const rows = all.map(t => [
       t.name||"",
       t.originalName||"",
@@ -1208,7 +1208,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       ["Exportiert am", new Date().toLocaleDateString("de-DE")],
       ["",""],
       ["Gesamt Tees", total],
-      ["Ø Bewertung", avgRating],
+      ["Ø Note", avgRating],
       ["",""],
       ["Nach Teesorte","Anzahl"],
       ...TEESORTEN.map(s=>[s, bySort[s]||0]),
@@ -1229,7 +1229,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.18";
+  const APP_VERSION = "v3.19";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -2796,7 +2796,7 @@ const SEED_TEAS = [
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('./sw.js')
-      .then(function(r) { console.log('SW:', r.scope)); })
+      .then(function(r) { console.log('SW:', r.scope); })
       .catch(function(e) { console.warn('SW fail:', e); });
   });
 }
