@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.17</title>
+<title>Teadrunk v3.18</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -582,7 +582,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.17</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.18</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -1229,7 +1229,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.17";
+  const APP_VERSION = "v3.18";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1537,11 +1537,9 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   }
 
   async function setCurrentRating(val){
-    const wrap = document.getElementById("stars-widget");
-    Array.from(wrap.querySelectorAll(".star-btn")).forEach(btn => {
-      updateStarVisual(btn, val, parseInt(btn.dataset.index,10));
-    });
-    document.getElementById("star-rating-label").textContent = val > 0 ? String(val).replace(".","," ) : "–";
+    val = Math.round(val * 2) / 2;
+    val = Math.max(0, Math.min(5, val));
+    renderStarWidget(val);
     if(!currentTeaId) return;
     const t = await dbGet("teas", currentTeaId);
     t.bewertung = val;
@@ -2798,7 +2796,7 @@ const SEED_TEAS = [
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('./sw.js')
-      .then(function(r) { console.log('SW:', r.scope); })
+      .then(function(r) { console.log('SW:', r.scope)); })
       .catch(function(e) { console.warn('SW fail:', e); });
   });
 }
