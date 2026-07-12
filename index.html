@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.8</title>
+<title>Teadrunk v3.10</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -442,6 +442,9 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <button class="gallery-add" id="gallery-add" title="Foto hinzufügen">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3D3929" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
+      <button id="gallery-delete-btn" title="Foto löschen" style="display:none;position:absolute;top:10px;left:10px;width:36px;height:36px;border-radius:999px;background:rgba(181,72,58,0.85);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
       <div class="gallery-dots" id="gallery-dots"></div>
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple style="display:none;">
@@ -523,27 +526,6 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   </div>
 </div>
 
-<div class="modal-backdrop" id="import-modal">
-  <div class="modal-card" style="max-width:340px;text-align:left;">
-    <h3 class="modal-title" style="text-align:center;">📸 Bilder importieren</h3>
-    <p class="modal-message">Wähle alle Bilder aus dem <strong>Teadrunk-Bilder</strong> ZIP-Ordner. Die App ordnet sie automatisch den passenden Tees zu.</p>
-    <div id="import-progress" style="display:none;margin-bottom:14px;">
-      <div style="background:var(--line);border-radius:999px;height:6px;overflow:hidden;">
-        <div id="import-progress-bar" style="background:var(--terracotta);height:100%;width:0%;transition:width .2s ease;border-radius:999px;"></div>
-      </div>
-      <p id="import-status" style="font-size:13px;color:var(--muted);margin:8px 0 0;text-align:center;"></p>
-    </div>
-    <div id="import-results" style="display:none;max-height:200px;overflow-y:auto;font-size:13px;margin-bottom:14px;">
-      <div id="import-matched" style="color:#2E7D32;margin-bottom:8px;"></div>
-      <div id="import-unmatched" style="color:var(--muted);"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" id="import-modal-cancel">Abbrechen</button>
-      <button class="modal-btn modal-btn-confirm" id="import-modal-select" style="background:var(--terracotta);border-color:var(--terracotta);">Ordner wählen</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <div class="modal-backdrop" id="version-modal" style="display:none;align-items:center;justify-content:center;">
@@ -558,10 +540,11 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.8</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.10</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="flex:none;width:100%;">Schließen</button>
+    <div class="modal-actions" style="flex-direction:column;gap:8px;">
+      <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
+      <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="width:100%;">Schließen</button>
     </div>
   </div>
 </div>
@@ -1166,17 +1149,28 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("Export erfolgreich");
   }
 
-  const APP_VERSION = "v3.8";
+  const APP_VERSION = "v3.10";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
     m.style.display = "flex";
     requestAnimationFrame(()=>m.classList.add("show"));
-    document.getElementById("version-modal-close").onclick = ()=>{
-      m.classList.remove("show");
-      setTimeout(()=>m.style.display="none", 180);
+    const closeModal = ()=>{ m.classList.remove("show"); setTimeout(()=>m.style.display="none",180); };
+    document.getElementById("version-modal-close").onclick = closeModal;
+    document.getElementById("version-clear-photos").onclick = async ()=>{
+      const ok = await showConfirm("Alle Fotos löschen?","Alle Fotos aus allen Tees werden unwiderruflich gelöscht.","Löschen");
+      if(!ok) return;
+      closeModal();
+      const t = db.transaction("photos","readwrite");
+      t.objectStore("photos").clear();
+      await new Promise((res,rej)=>{ t.oncomplete=res; t.onerror=()=>rej(t.error); });
+      const teas = await dbGetAll("teas");
+      for(const tea of teas){ tea.mainPhotoId=null; await dbPut("teas",tea); }
+      await saveToFile();
+      if(currentTeaId){ currentPhotos=[]; renderGallery(); renderThumbStrip(); }
+      toast("✓ Alle Fotos gelöscht");
     };
-    m.addEventListener("click", (e)=>{ if(e.target===m){ m.classList.remove("show"); setTimeout(()=>m.style.display="none",180); }});
+    m.addEventListener("click", (e)=>{ if(e.target===m){ closeModal(); }});
   }
 
   function setupListEvents(){
@@ -1221,14 +1215,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 
     document.getElementById("btn-add").addEventListener("click", createNewTea);
     document.getElementById("btn-export").addEventListener("click", exportToExcel);
-    document.getElementById("btn-import-photos").addEventListener("click", openImportModal);
-    document.getElementById("btn-import-json").addEventListener("click", () => document.getElementById("json-import-input").click());
-    document.getElementById("json-import-input").addEventListener("change", async (e) => {
-      if(e.target.files && e.target.files[0]){
-        await importFromJSON(e.target.files[0]);
-      }
-      e.target.value = "";
-    });
+
     document.getElementById("import-photos-input").addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
@@ -1470,11 +1457,15 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       dotsEl.innerHTML = "";
       prevBtn.style.display = "none";
       nextBtn.style.display = "none";
+      const delBtnE = document.getElementById("gallery-delete-btn");
+      if(delBtnE) delBtnE.style.display = "none";
       return;
     }
     emptyEl.style.display = "none";
     prevBtn.style.display = currentPhotos.length>1 ? "flex" : "none";
     nextBtn.style.display = currentPhotos.length>1 ? "flex" : "none";
+    const delBtn = document.getElementById("gallery-delete-btn");
+    if(delBtn) delBtn.style.display = currentPhotos.length > 0 ? "flex" : "none";
 
     track.innerHTML = currentPhotos.map(p => `<div class="gallery-slide"><img src="${p.dataURL}"></div>`).join("");
     dotsEl.innerHTML = currentPhotos.map((p,i)=>`<div class="gallery-dot" data-active="${i===currentSlide}"></div>`).join("");
@@ -1613,6 +1604,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     document.getElementById("gallery-prev").addEventListener("click", () => goToSlide(currentSlide-1, true));
     document.getElementById("gallery-next").addEventListener("click", () => goToSlide(currentSlide+1, true));
     document.getElementById("gallery-add").addEventListener("click", () => document.getElementById("photo-input").click());
+    document.getElementById("gallery-delete-btn").addEventListener("click", () => { if(currentPhotos.length > 0) deletePhoto(currentSlide); });
     document.getElementById("photo-input").addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
@@ -2601,204 +2593,10 @@ const SEED_TEAS = [
     const store = t.objectStore("teas");
     for(const tea of SEED_TEAS){ store.put(tea); }
     await new Promise((res,rej)=>{ t.oncomplete=res; t.onerror=()=>rej(t.error); });
-    toast("✓ " + SEED_TEAS.length + " Tees aus deiner Teeliste importiert");
+    toast("✓ " + SEED_TEAS.length + " Tees geladen");
   }
 
-  /* ============================================================
-     FOTO BULK IMPORT
-  ============================================================ */
-
-  // Build a normalized name map from all teas for fuzzy matching
-  function normalizeName(name){
-    return name.toLowerCase()
-      .replace(/[_\-]/g, ' ')
-      .replace(/[^a-z0-9À-ɏ一-鿿 ]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  function findTeaForFilename(filename, teas){
-    const base = filename.replace(/\.[^.]+$/, '').replace(/_\d+$/, '');
-
-    // Primary: match by teaCode (TD001, TD001_1 etc.)
-    const codeMatch = base.match(/^(TD\d+)/i);
-    if(codeMatch){
-      const code = codeMatch[1].toUpperCase();
-      const tea = teas.find(t => t.teaCode && t.teaCode.toUpperCase() === code);
-      if(tea) return tea;
-    }
-
-    // Fallback: fuzzy name match
-    const normalBase = normalizeName(base);
-    let bestMatch = null;
-    let bestScore = 0;
-
-    for(const tea of teas){
-      if(!tea.name) continue;
-      const normalTea = normalizeName(tea.name);
-      if(normalBase === normalTea) return tea;
-      if(normalBase.startsWith(normalTea) && normalTea.length > bestScore){
-        bestMatch = tea; bestScore = normalTea.length;
-      }
-      if(normalTea.startsWith(normalBase) && normalTea.length > bestScore){
-        bestMatch = tea; bestScore = normalTea.length;
-      }
-      const teaWords = normalTea.split(' ').filter(w => w.length > 2);
-      const baseWords = normalBase.split(' ').filter(w => w.length > 2);
-      const overlap = teaWords.filter(w => baseWords.includes(w)).length;
-      const score = overlap * 10 + (overlap > 0 ? Math.min(normalTea.length, normalBase.length) : 0);
-      if(score > bestScore && overlap >= 2){ bestScore = score; bestMatch = tea; }
-    }
-    return bestMatch;
-  }
-
-  async function bulkImportPhotos(files){
-    const modal = document.getElementById("import-modal");
-    const progressWrap = document.getElementById("import-progress");
-    const progressBar = document.getElementById("import-progress-bar");
-    const statusEl = document.getElementById("import-status");
-    const resultsEl = document.getElementById("import-results");
-    const matchedEl = document.getElementById("import-matched");
-    const unmatchedEl = document.getElementById("import-unmatched");
-    const selectBtn = document.getElementById("import-modal-select");
-
-    selectBtn.disabled = true;
-    progressWrap.style.display = "block";
-    resultsEl.style.display = "none";
-
-    const teas = await dbGetAll("teas");
-    console.log("Import: teas in DB:", teas.length);
-
-    // Accept images by MIME type OR by extension (for Android)
-    const imageFiles = (Array.isArray(files) ? files : Array.from(files)).filter(f =>
-      f.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|heic)$/i.test(f.name)
-    );
-    console.log("Import: image files:", imageFiles.length, imageFiles.slice(0,3).map(f=>f.name));
-
-    // Show visible debug info in the dialog
-    const debugInfo = "Empfangen: " + files.length + " Dateien, " +
-                      "Bilder erkannt: " + imageFiles.length +
-                      (imageFiles.length > 0 ? " (1. Datei: " + imageFiles[0].name + ", Typ: " + (imageFiles[0].type||"leer") + ")" : "");
-    statusEl.textContent = debugInfo;
-    progressWrap.style.display = "block";
-    await new Promise(r => setTimeout(r, 300));
-
-    if(imageFiles.length === 0){
-      statusEl.textContent = "⚠️ Keine Bilddateien erkannt! Dateityp: " +
-        (files[0] ? (files[0].type || "kein Typ, Name: " + files[0].name) : "keine Dateien");
-      selectBtn.disabled = false;
-      selectBtn.textContent = "Nochmal versuchen";
-      return;
-    }
-    statusEl.textContent = imageFiles.length + " Bilder gefunden, ordne zu...";
-    await new Promise(r => setTimeout(r, 100));
-
-    const teaPhotoMap = new Map();
-    const matched = [];
-    const unmatched = [];
-
-    for(const file of imageFiles){
-      const tea = findTeaForFilename(file.name, teas);
-      if(tea){
-        if(!teaPhotoMap.has(tea.id)) teaPhotoMap.set(tea.id, []);
-        teaPhotoMap.get(tea.id).push(file);
-        matched.push({ file: file.name, tea: tea.name });
-      } else {
-        unmatched.push(file.name);
-      }
-    }
-
-    console.log("Import matched:", matched.length, "unmatched:", unmatched.length);
-    statusEl.textContent = matched.length + " zugeordnet, speichere...";
-    await new Promise(r => setTimeout(r, 50));
-
-    let done = 0;
-    let errors = 0;
-    const total = matched.length;
-
-    for(const [teaId, photoFiles] of teaPhotoMap){
-      const existing = await dbGetPhotosForTea(teaId);
-      let order = existing.length ? Math.max(...existing.map(p=>p.order||0))+1 : 0;
-      let isFirst = existing.length === 0;
-
-      for(const file of photoFiles){
-        try{
-          const dataURL = await resizeImageFile(file);
-          const photoObj = {teaId, dataURL, order: order++};
-          const newId = await dbPut("photos", photoObj);
-          console.log("Saved photo", newId, "for tea", teaId);
-
-          if(isFirst){
-            const tea = await dbGet("teas", teaId);
-            if(tea){ tea.mainPhotoId = newId; await dbPut("teas", tea); }
-            isFirst = false;
-          }
-          done++;
-        } catch(e){
-          console.error("Photo error:", file.name, e.message || e);
-          errors++;
-          done++;
-        }
-        progressBar.style.width = Math.round(done/total*100) + "%";
-        statusEl.textContent = done + " / " + total + " Bilder gespeichert...";
-        await new Promise(r => setTimeout(r, 5));
-      }
-    }
-
-    const allPhotos = await dbGetAll("photos");
-    console.log("Total photos in DB after import:", allPhotos.length);
-
-    progressWrap.style.display = "none";
-    resultsEl.style.display = "block";
-
-    const savedCount = done - errors;
-    matchedEl.innerHTML = matched.length
-      ? "<strong>Gespeichert: " + savedCount + " Bilder</strong><br>" +
-        matched.map(function(m){ return m.file + " → " + m.tea; }).join("<br>")
-      : "";
-
-    unmatchedEl.innerHTML = unmatched.length
-      ? "<br><strong>Nicht erkannt (" + unmatched.length + "):</strong><br>" + unmatched.join("<br>")
-      : "";
-
-    selectBtn.textContent = "Fertig";
-    selectBtn.disabled = false;
-    selectBtn.onclick = async function(){
-      modal.classList.remove("show");
-      setTimeout(function(){ modal.style.display="none"; }, 180);
-      await loadTeasAndRender();
-      await saveToFile();
-    };
-
-    toast("Gespeichert: " + savedCount + " Bilder");
-  }
-
-    function openImportModal(){
-    const modal = document.getElementById("import-modal");
-    const progressWrap = document.getElementById("import-progress");
-    const resultsEl = document.getElementById("import-results");
-    const selectBtn = document.getElementById("import-modal-select");
-    const cancelBtn = document.getElementById("import-modal-cancel");
-    const progressBar = document.getElementById("import-progress-bar");
-
-    // Reset state
-    progressWrap.style.display = "none";
-    resultsEl.style.display = "none";
-    progressBar.style.width = "0%";
-    selectBtn.textContent = "Bilder auswählen";
-    selectBtn.disabled = false;
-    selectBtn.onclick = () => document.getElementById("import-photos-input").click();
-
-    cancelBtn.onclick = () => {
-      modal.classList.remove("show");
-      setTimeout(()=>modal.style.display="none", 180);
-    };
-
-    modal.style.display = "flex";
-    requestAnimationFrame(() => modal.classList.add("show"));
-  }
-
-  async function importFromJSON(file){
+    async function importFromJSON(file){
     try{
       const text = await file.text();
       const data = JSON.parse(text);
