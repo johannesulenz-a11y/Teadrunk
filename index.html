@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.15</title>
+<title>Teadrunk v3.16</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -303,7 +303,43 @@
   .modal-btn-confirm{background:var(--danger); border-color:var(--danger); color:#fff;}
   .modal-btn-confirm:hover{background:#9c3c30;}
 
-  /* ---------- Save indicator pill ---------- */
+  /* ---------- Read / Edit mode ---------- */
+  .detail-body.view-mode input:not([type=file]),
+  .detail-body.view-mode select,
+  .detail-body.view-mode textarea{
+    pointer-events:none; background:transparent; border-color:transparent;
+    color:var(--ink); resize:none; -webkit-user-select:none; user-select:none;
+  }
+  .detail-body.view-mode .card{background:transparent; border-color:transparent; padding:12px 0;}
+  .detail-body.view-mode .name-input{border-bottom:none; padding-bottom:0;}
+  .detail-body.view-mode .name-underline{display:none;}
+  .detail-body.view-mode .stars .star-btn{pointer-events:none;}
+  .detail-body.view-mode .danger-zone{display:none;}
+  .detail-body.view-mode .select-wrap::after{display:none;}
+
+  /* Edit button sticky at bottom */
+  .btn-edit-wrap{
+    position:sticky; bottom:0; background:linear-gradient(transparent, var(--cream) 40%);
+    padding:16px 16px 32px; margin-top:-8px; text-align:center; pointer-events:none;
+  }
+  .btn-edit{
+    background:var(--terracotta); color:#fff; border:none;
+    padding:13px 32px; border-radius:999px; font-size:15px; font-weight:600;
+    cursor:pointer; box-shadow:var(--shadow); pointer-events:auto;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .btn-edit:hover{background:var(--terracotta-dark);}
+  .btn-edit:active{transform:scale(0.96);}
+
+  /* Star button on gallery */
+  .gallery-star{
+    position:absolute; top:10px; left:52px; width:36px; height:36px; border-radius:999px;
+    background:rgba(255,255,255,0.9); border:none; display:none; align-items:center;
+    justify-content:center; cursor:pointer; box-shadow:var(--shadow);
+  }
+  .gallery-star.is-main svg path{fill:#D97757; stroke:#D97757;}
+
+    /* ---------- Save indicator pill ---------- */
   .save-pill{
     display:none; align-items:center; gap:5px;
     padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
@@ -509,6 +545,9 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         <button class="btn-delete" id="btn-delete-tea">Tee löschen</button>
       </div>
     </div>
+    <div class="btn-edit-wrap">
+      <button class="btn-edit" id="btn-edit-tea">✏️ Bearbeiten</button>
+    </div>
   </section>
 
 </div>
@@ -543,7 +582,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.15</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.16</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -1190,7 +1229,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.15";
+  const APP_VERSION = "v3.16";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -2739,8 +2778,8 @@ const SEED_TEAS = [
     setupDetailEvents();
     setupGalleryEvents();
     setupSavePill();
-    await loadTeasAndRender();
     updateSavePill();
+    await loadTeasAndRender();
   }
 
   function setupSavePill(){
