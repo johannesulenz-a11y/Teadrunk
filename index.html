@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.23</title>
+<title>Teadrunk v3.24</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -573,7 +573,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.23</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.24</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -1209,7 +1209,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.23";
+  const APP_VERSION = "v3.24";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1370,9 +1370,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   }
 
   async function openDetail(id){
+    try{
     currentTeaId = id;
     const t = await dbGet("teas", id);
-    if(!t) return;
+    if(!t){ toast("Tee nicht gefunden: " + id); return; }
 
     // Pre-fill edit form (hidden)
     fillSelect(document.getElementById("field-teesorte"), TEESORTEN, "– wählen –");
@@ -1410,6 +1411,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     }
     renderGallery();
     showView("view-detail", true);
+    } catch(err){ toast("Fehler: " + err.message); console.error(err); }
   }
 
   function closeDetail(){
