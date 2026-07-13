@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.19</title>
+<title>Teadrunk v3.21</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -257,9 +257,6 @@
   .field-row .field{flex:1;}
 
   .stars{display:flex; gap:3px; align-items:center;}
-  .star-btn{position:relative; width:30px;height:30px; cursor:pointer; flex:none;}
-  .star-btn svg{position:absolute; top:0; left:0; width:30px; height:30px;}
-  .star-rating-label{margin-left:6px; font-size:13px; color:var(--muted);}
 
   .danger-zone{margin-top:24px; text-align:center;}
   .btn-delete{
@@ -303,25 +300,15 @@
   .modal-btn-confirm{background:var(--danger); border-color:var(--danger); color:#fff;}
   .modal-btn-confirm:hover{background:#9c3c30;}
 
-  /* ---------- Read / Edit mode ---------- */
-  .detail-body.view-mode input:not([type=file]),
-  .detail-body.view-mode select,
-  .detail-body.view-mode textarea{
-    pointer-events:none; background:transparent; border-color:transparent;
-    color:var(--ink); resize:none; -webkit-user-select:none; user-select:none;
-  }
-  .detail-body.view-mode .card{background:transparent; border-color:transparent; padding:12px 0;}
-  .detail-body.view-mode .name-input{border-bottom:none; padding-bottom:0;}
-  .detail-body.view-mode .name-underline{display:none;}
-  .detail-body.view-mode .stars .star-btn{pointer-events:none;}
-  .detail-body.view-mode .danger-zone{display:none;}
-  .detail-body.view-mode .select-wrap::after{display:none;}
-
   /* Edit button sticky at bottom */
   .btn-edit-wrap{
-    position:sticky; bottom:0; background:linear-gradient(transparent, var(--cream) 40%);
-    padding:16px 16px 32px; margin-top:-8px; text-align:center; pointer-events:none;
+    position:fixed; bottom:0; left:0; right:0;
+    background:linear-gradient(transparent, var(--cream) 55%);
+    padding:16px 16px 32px; text-align:center; pointer-events:none;
+    z-index:15;
   }
+  /* Extra padding at bottom of detail body so content not hidden behind button */
+  #detail-view-body, #detail-edit-body{ padding-bottom:100px; }
   .btn-edit{
     background:var(--terracotta); color:#fff; border:none;
     padding:13px 32px; border-radius:999px; font-size:15px; font-weight:600;
@@ -491,8 +478,16 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple style="display:none;">
 
-    <div class="detail-body">
-      <input type="text" class="name-input" id="field-name" placeholder="Name des Tees" readonly>
+    <!-- READ VIEW: pure text, no inputs -->
+    <div class="detail-body" id="detail-view-body">
+      <div class="name-input" style="padding:0 0 6px;border:none;background:transparent;" id="view-name"></div>
+      <div id="view-teacode" style="font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:18px;font-family:monospace;"></div>
+      <div class="card" id="view-card"></div>
+    </div>
+
+    <!-- EDIT VIEW: form with inputs, hidden by default -->
+    <div class="detail-body" id="detail-edit-body" style="display:none;">
+      <input type="text" class="name-input" id="field-name" placeholder="Name des Tees">
       <div class="name-underline"></div>
       <div id="field-teacode-wrap" style="font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:12px;font-family:monospace;"></div>
 
@@ -545,6 +540,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         <button class="btn-delete" id="btn-delete-tea">Tee löschen</button>
       </div>
     </div>
+
     <div class="btn-edit-wrap">
       <button class="btn-edit" id="btn-edit-tea">✏️ Bearbeiten</button>
     </div>
@@ -582,7 +578,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.19</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.21</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -933,17 +929,6 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     });
   }
 
-  function starsSvg(filled, half){
-    // filled: voll, half: halb gefüllt
-    const fillColor = "#D97757";
-    const emptyColor = "#E5E2D9";
-    if(half){
-      return `<svg viewBox="0 0 24 24"><defs><linearGradient id="halfgrad-${Math.random().toString(36).slice(2)}" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="50%" stop-color="${fillColor}"/><stop offset="50%" stop-color="${emptyColor}"/></linearGradient></defs>
-        <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21.2 L12 17.5 L5.8 21.2 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="${half}"/></svg>`;
-    }
-    return `<svg viewBox="0 0 24 24"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21.2 L12 17.5 L5.8 21.2 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="${filled? fillColor : emptyColor}"/></svg>`;
-  }
 
   function renderStarsReadOnly(value){
     // gibt kompakten HTML-String mit 5 kleinen Sternen zurück (für Tabelle)
@@ -1229,7 +1214,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.19";
+  const APP_VERSION = "v3.21";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1340,22 +1325,53 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     openDetail(id);
   }
 
+  function renderViewBody(t){
+    // Populate the read-only view — no inputs
+    const viewName = document.getElementById("view-name");
+    if(viewName) viewName.textContent = t.name || "(ohne Namen)";
+
+    const viewCode = document.getElementById("view-teacode");
+    if(viewCode) viewCode.textContent = t.teaCode || "";
+
+    const card = document.getElementById("view-card");
+    if(!card) return;
+
+    const rows = [
+      ["Note",        t.bewertung > 0 ? t.bewertung.toFixed(1) : "–"],
+      ["Teesorte",    t.teesorte || "–"],
+      ["Typ",         t.typ || "–"],
+      ["Herkunft",    t.herkunftsland || "–"],
+      ["Status",      t.status || "–"],
+      ["Originalname",t.originalName || "–"],
+      ["Gekauft bei", t.gekauftBei || "–"],
+      ["Preis/kg",    t.preis > 0 ? t.preis.toFixed(2) + " €" : "–"],
+    ].filter(([,v]) => v !== "–");
+
+    if(t.notizen && t.notizen.trim()){
+      rows.push(["Notizen", t.notizen.trim()]);
+    }
+
+    card.innerHTML = rows.map(([label, val]) =>
+      `<div class="field" style="margin-bottom:12px;">
+        <label style="display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:3px;">${label}</label>
+        <div style="font-size:14.5px;color:var(--ink);white-space:pre-wrap;">${escapeHtml(String(val))}</div>
+       </div>`
+    ).join("");
+  }
+
   async function openDetail(id){
     currentTeaId = id;
     const t = await dbGet("teas", id);
     if(!t) return;
 
-    document.getElementById("field-name").value = t.name || "";
-    const codeWrap = document.getElementById("field-teacode-wrap");
-    if(codeWrap) codeWrap.textContent = t.teaCode ? t.teaCode : "";
-    // Re-enable name field for editing
-    document.getElementById("field-name").setAttribute("readonly","");
+    // Populate edit form fields
     fillSelect(document.getElementById("field-teesorte"), TEESORTEN, "– wählen –");
     document.getElementById("field-teesorte").value = t.teesorte || "";
     fillSelect(document.getElementById("field-herkunft"), HERKUNFTSLAENDER, "– wählen –");
     document.getElementById("field-herkunft").value = t.herkunftsland || "";
     fillSelect(document.getElementById("field-status"), STATUS_OPTIONS, undefined);
     document.getElementById("field-status").value = t.status || "Gekauft";
+    document.getElementById("field-name").value = t.name || "";
     document.getElementById("field-originalname").value = t.originalName || "";
     document.getElementById("field-typ").value = t.typ || "";
     document.getElementById("field-gekauftbei").value = t.gekauftBei || "";
@@ -1363,27 +1379,26 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     const notizenEl = document.getElementById("field-notizen");
     notizenEl.value = t.notizen || "";
     setTimeout(()=>{ notizenEl.style.height="auto"; notizenEl.style.height=notizenEl.scrollHeight+"px"; }, 50);
-
+    document.getElementById("field-teacode-wrap").textContent = t.teaCode || "";
     renderStarWidget(t.bewertung || 0);
 
-    currentPhotos = await dbGetPhotosForTea(id);
-    currentSlide = 0;
-    // Hauptfoto an erste Stelle bringen
-    if(t.mainPhotoId){
-      const idx = currentPhotos.findIndex(p => p.id === t.mainPhotoId);
-      if(idx > 0){
-        const [main] = currentPhotos.splice(idx,1);
-        currentPhotos.unshift(main);
-      }
-    }
-    renderGallery();
+    // Populate view body
+    renderViewBody(t);
 
-    // Start in view-mode (read-only)
-    const detailBody = document.querySelector(".detail-body");
-    if(detailBody){ detailBody.classList.add("view-mode"); detailBody.classList.remove("edit-mode"); }
+    // Show view body, hide edit body
+    document.getElementById("detail-view-body").style.display = "block";
+    document.getElementById("detail-edit-body").style.display = "none";
     const editBtn = document.getElementById("btn-edit-tea");
     if(editBtn){ editBtn.textContent = "✏️ Bearbeiten"; editBtn.dataset.mode = "view"; }
-    document.getElementById("field-name").setAttribute("readonly","");
+
+    // Gallery
+    currentPhotos = await dbGetPhotosForTea(id);
+    currentSlide = 0;
+    if(t.mainPhotoId){
+      const idx = currentPhotos.findIndex(p => p.id === t.mainPhotoId);
+      if(idx > 0){ const [main] = currentPhotos.splice(idx,1); currentPhotos.unshift(main); }
+    }
+    renderGallery();
 
     showView("view-detail", true);
   }
@@ -1403,17 +1418,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     saveTimer = setTimeout(saveCurrentTea, 350);
   }
 
-  function setupNameFieldFocus(){
-    const nameInput = document.getElementById("field-name");
-    if(!nameInput) return;
-    nameInput.addEventListener("click", () => {
-      nameInput.removeAttribute("readonly");
-      nameInput.focus();
-    });
-    nameInput.addEventListener("blur", () => {
-      // Don't re-add readonly after edit
-    });
-  }
+
 
   async function saveCurrentTea(showConfirmation){
     if(!currentTeaId) return;
@@ -1435,7 +1440,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 
   function setupDetailEvents(){
     document.getElementById("btn-back").addEventListener("click", async () => {
-      await saveCurrentTea(true);
+      const editBtn = document.getElementById("btn-edit-tea");
+      if(editBtn && editBtn.dataset.mode === "edit"){
+        await saveCurrentTea(true);
+      }
       closeDetail();
     });
     ["field-name","field-originalname","field-teesorte","field-herkunft","field-status","field-typ","field-gekauftbei","field-preis","field-notizen"].forEach(id => {
@@ -1453,24 +1461,26 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       }
     });
 
-    setupNameFieldFocus();
     document.getElementById("btn-edit-tea").addEventListener("click", async () => {
-      const detailBody = document.querySelector(".detail-body");
       const editBtn = document.getElementById("btn-edit-tea");
-      if(!detailBody || !editBtn) return;
+      if(!editBtn) return;
       if(editBtn.dataset.mode === "view"){
-        detailBody.classList.remove("view-mode");
+        // Switch to edit mode — show form, hide view
+        document.getElementById("detail-view-body").style.display = "none";
+        document.getElementById("detail-edit-body").style.display = "block";
         editBtn.textContent = "💾 Speichern";
         editBtn.dataset.mode = "edit";
-        document.getElementById("field-name").removeAttribute("readonly");
         document.getElementById("gallery-add").style.display = "flex";
         document.getElementById("gallery-delete-btn").style.display = currentPhotos.length > 0 ? "flex" : "none";
       } else {
+        // Save and switch back to view mode
         await saveCurrentTea(true);
-        detailBody.classList.add("view-mode");
+        const t = await dbGet("teas", currentTeaId);
+        if(t) renderViewBody(t);
+        document.getElementById("detail-edit-body").style.display = "none";
+        document.getElementById("detail-view-body").style.display = "block";
         editBtn.textContent = "✏️ Bearbeiten";
         editBtn.dataset.mode = "view";
-        document.getElementById("field-name").setAttribute("readonly","");
         document.getElementById("gallery-add").style.display = "none";
         document.getElementById("gallery-delete-btn").style.display = "none";
         await loadTeasAndRender();
@@ -1498,44 +1508,33 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   ============================================================ */
   function renderStarWidget(value){
     const wrap = document.getElementById("stars-widget");
+    if(!wrap) return;
     wrap.innerHTML = "";
-    for(let i=1;i<=5;i++){
-      const btn = document.createElement("div");
-      btn.className = "star-btn";
-      btn.dataset.index = i;
-      updateStarVisual(btn, value, i);
-      btn.addEventListener("click", (e) => {
-        const rect = btn.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const isHalf = clickX < rect.width/2;
-        const newVal = isHalf ? i - 0.5 : i;
-        setCurrentRating(newVal);
-      });
-      wrap.appendChild(btn);
-    }
-    const label = document.createElement("span");
-    label.className = "star-rating-label";
-    label.id = "star-rating-label";
-    label.textContent = value > 0 ? value.toFixed(1).replace(".0","").replace(".5",",5") : "–";
-    wrap.appendChild(label);
+    wrap.style.cssText = "display:flex;align-items:center;gap:14px;";
+
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.textContent = "−";
+    minus.style.cssText = "width:34px;height:34px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface-2);font-size:20px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;";
+    minus.addEventListener("click", () => setCurrentRating(Math.max(0, (value||0) - 0.5)));
+
+    const num = document.createElement("span");
+    num.id = "star-rating-label";
+    num.style.cssText = "font-size:32px;font-weight:700;color:var(--terracotta);min-width:52px;text-align:center;font-family:var(--font-display);";
+    num.textContent = value > 0 ? value.toFixed(1) : "–";
+
+    const plus = document.createElement("button");
+    plus.type = "button";
+    plus.textContent = "+";
+    plus.style.cssText = "width:34px;height:34px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface-2);font-size:20px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;";
+    plus.addEventListener("click", () => setCurrentRating(Math.min(5, (value||0) + 0.5)));
+
+    wrap.appendChild(minus);
+    wrap.appendChild(num);
+    wrap.appendChild(plus);
   }
 
-  function updateStarVisual(btn, value, i){
-    let mode = "empty";
-    if(value >= i) mode = "full";
-    else if(value >= i-0.5) mode = "half";
-    if(mode === "half"){
-      btn.innerHTML = starsSvg(false, "url(#sg)") ;
-      // inline half star (unique gradient per render to avoid id clashes)
-      const gid = "starhalf-"+i+"-"+Math.random().toString(36).slice(2);
-      btn.innerHTML = `<svg viewBox="0 0 24 24"><defs><linearGradient id="${gid}" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="50%" stop-color="#D97757"/><stop offset="50%" stop-color="#E5E2D9"/></linearGradient></defs>
-        <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21.2 L12 17.5 L5.8 21.2 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="url(#${gid})"/></svg>`;
-    } else {
-      btn.innerHTML = starsSvg(mode === "full");
-    }
-  }
-
+  
   async function setCurrentRating(val){
     val = Math.round(val * 2) / 2;
     val = Math.max(0, Math.min(5, val));
