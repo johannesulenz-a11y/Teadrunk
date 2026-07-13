@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.21</title>
+<title>Teadrunk v3.22</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -302,13 +302,8 @@
 
   /* Edit button sticky at bottom */
   .btn-edit-wrap{
-    position:fixed; bottom:0; left:0; right:0;
-    background:linear-gradient(transparent, var(--cream) 55%);
-    padding:16px 16px 32px; text-align:center; pointer-events:none;
-    z-index:15;
+    padding:24px 16px 40px; text-align:center;
   }
-  /* Extra padding at bottom of detail body so content not hidden behind button */
-  #detail-view-body, #detail-edit-body{ padding-bottom:100px; }
   .btn-edit{
     background:var(--terracotta); color:#fff; border:none;
     padding:13px 32px; border-radius:999px; font-size:15px; font-weight:600;
@@ -478,65 +473,65 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple style="display:none;">
 
-    <!-- READ VIEW: pure text, no inputs -->
+    <!-- SINGLE FORM: same layout in read and edit mode -->
     <div class="detail-body" id="detail-view-body">
-      <div class="name-input" style="padding:0 0 6px;border:none;background:transparent;" id="view-name"></div>
-      <div id="view-teacode" style="font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:18px;font-family:monospace;"></div>
-      <div class="card" id="view-card"></div>
-    </div>
-
-    <!-- EDIT VIEW: form with inputs, hidden by default -->
-    <div class="detail-body" id="detail-edit-body" style="display:none;">
-      <input type="text" class="name-input" id="field-name" placeholder="Name des Tees">
+      <input type="text" class="name-input" id="field-name" placeholder="Name des Tees"
+             tabindex="-1" inputmode="none" readonly>
       <div class="name-underline"></div>
       <div id="field-teacode-wrap" style="font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:12px;font-family:monospace;"></div>
 
       <div class="card">
         <div class="field">
-          <label>Note</label>
+          <label>Bewertung</label>
           <div class="stars" id="stars-widget"></div>
         </div>
         <div class="field-row">
           <div class="field">
             <label>Teesorte</label>
-            <select id="field-teesorte"></select>
+            <select id="field-teesorte" tabindex="-1"></select>
           </div>
           <div class="field">
             <label>Herkunftsland</label>
-            <select id="field-herkunft"></select>
+            <select id="field-herkunft" tabindex="-1"></select>
           </div>
         </div>
         <div class="field-row">
           <div class="field">
             <label>Typ</label>
-            <input type="text" id="field-typ" placeholder="z. B. Tie Guan Yin">
+            <input type="text" id="field-typ" placeholder="z. B. Tie Guan Yin"
+                   tabindex="-1" inputmode="none" readonly>
           </div>
           <div class="field">
             <label>Status</label>
-            <select id="field-status"></select>
+            <select id="field-status" tabindex="-1"></select>
           </div>
         </div>
         <div class="field">
           <label>Originalname (漢字 / 仮名)</label>
-          <input type="text" id="field-originalname" placeholder="z. B. 龍井茶, 鉄観音…">
+          <input type="text" id="field-originalname" placeholder="z. B. 龍井茶, 鉄観音…"
+                 tabindex="-1" inputmode="none" readonly>
         </div>
         <div class="field-row">
           <div class="field">
             <label>Gekauft bei</label>
-            <input type="text" id="field-gekauftbei" placeholder="z. B. Taobao, Yoshien…">
+            <input type="text" id="field-gekauftbei" placeholder="z. B. Taobao, Yoshien…"
+                   tabindex="-1" inputmode="none" readonly>
           </div>
           <div class="field">
             <label>Preis / kg (€)</label>
-            <input type="number" id="field-preis" placeholder="0.00" min="0" step="0.01">
+            <input type="number" id="field-preis" placeholder="0.00" min="0" step="0.01"
+                   tabindex="-1" inputmode="none" readonly>
           </div>
         </div>
         <div class="field">
           <label>Notizen</label>
-          <textarea id="field-notizen" placeholder="Aroma, Aufguss, Eindrücke…" rows="4" style="min-height:80px;height:auto;overflow:hidden;resize:none;"></textarea>
+          <textarea id="field-notizen" placeholder="Aroma, Aufguss, Eindrücke…"
+                    rows="4" style="min-height:80px;height:auto;overflow:hidden;resize:none;"
+                    tabindex="-1" readonly></textarea>
         </div>
       </div>
 
-      <div class="danger-zone">
+      <div class="danger-zone" id="danger-zone" style="display:none;">
         <button class="btn-delete" id="btn-delete-tea">Tee löschen</button>
       </div>
     </div>
@@ -578,7 +573,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.21</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.22</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -1214,7 +1209,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.21";
+  const APP_VERSION = "v3.22";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1325,40 +1320,49 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     openDetail(id);
   }
 
-  function renderViewBody(t){
-    // Populate the read-only view — no inputs
-    const viewName = document.getElementById("view-name");
-    if(viewName) viewName.textContent = t.name || "(ohne Namen)";
-
-    const viewCode = document.getElementById("view-teacode");
-    if(viewCode) viewCode.textContent = t.teaCode || "";
-
-    const card = document.getElementById("view-card");
-    if(!card) return;
-
-    const rows = [
-      ["Note",        t.bewertung > 0 ? t.bewertung.toFixed(1) : "–"],
-      ["Teesorte",    t.teesorte || "–"],
-      ["Typ",         t.typ || "–"],
-      ["Herkunft",    t.herkunftsland || "–"],
-      ["Status",      t.status || "–"],
-      ["Originalname",t.originalName || "–"],
-      ["Gekauft bei", t.gekauftBei || "–"],
-      ["Preis/kg",    t.preis > 0 ? t.preis.toFixed(2) + " €" : "–"],
-    ].filter(([,v]) => v !== "–");
-
-    if(t.notizen && t.notizen.trim()){
-      rows.push(["Notizen", t.notizen.trim()]);
-    }
-
-    card.innerHTML = rows.map(([label, val]) =>
-      `<div class="field" style="margin-bottom:12px;">
-        <label style="display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:3px;">${label}</label>
-        <div style="font-size:14.5px;color:var(--ink);white-space:pre-wrap;">${escapeHtml(String(val))}</div>
-       </div>`
-    ).join("");
+  function lockForm(){
+    // Read mode: prevent keyboard by setting tabindex=-1, inputmode=none, readonly
+    ["field-name","field-typ","field-originalname","field-gekauftbei","field-preis","field-notizen"].forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.setAttribute("tabindex","-1");
+      el.setAttribute("inputmode","none");
+      el.setAttribute("readonly","");
+    });
+    ["field-teesorte","field-herkunft","field-status"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.setAttribute("tabindex","-1");
+    });
+    const dz = document.getElementById("danger-zone");
+    if(dz) dz.style.display = "none";
+    document.getElementById("gallery-add").style.display = "none";
+    document.getElementById("gallery-delete-btn").style.display = "none";
+    const starsWrap = document.getElementById("stars-widget");
+    if(starsWrap) starsWrap.style.pointerEvents = "none";
   }
 
+  function unlockForm(){
+    // Edit mode: allow interaction
+    ["field-name","field-typ","field-originalname","field-gekauftbei","field-preis","field-notizen"].forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.removeAttribute("tabindex");
+      el.removeAttribute("inputmode");
+      el.removeAttribute("readonly");
+    });
+    ["field-teesorte","field-herkunft","field-status"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.removeAttribute("tabindex");
+    });
+    const dz = document.getElementById("danger-zone");
+    if(dz) dz.style.display = "block";
+    document.getElementById("gallery-add").style.display = "flex";
+    document.getElementById("gallery-delete-btn").style.display = currentPhotos.length > 0 ? "flex" : "none";
+    const starsWrap = document.getElementById("stars-widget");
+    if(starsWrap) starsWrap.style.pointerEvents = "auto";
+  }
+
+  
   async function openDetail(id){
     currentTeaId = id;
     const t = await dbGet("teas", id);
@@ -1385,9 +1389,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     // Populate view body
     renderViewBody(t);
 
-    // Show view body, hide edit body
-    document.getElementById("detail-view-body").style.display = "block";
-    document.getElementById("detail-edit-body").style.display = "none";
+    // Lock form in read mode
+    lockForm();
     const editBtn = document.getElementById("btn-edit-tea");
     if(editBtn){ editBtn.textContent = "✏️ Bearbeiten"; editBtn.dataset.mode = "view"; }
 
@@ -1441,9 +1444,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   function setupDetailEvents(){
     document.getElementById("btn-back").addEventListener("click", async () => {
       const editBtn = document.getElementById("btn-edit-tea");
-      if(editBtn && editBtn.dataset.mode === "edit"){
-        await saveCurrentTea(true);
-      }
+      if(editBtn && editBtn.dataset.mode === "edit") await saveCurrentTea(true);
       closeDetail();
     });
     ["field-name","field-originalname","field-teesorte","field-herkunft","field-status","field-typ","field-gekauftbei","field-preis","field-notizen"].forEach(id => {
@@ -1465,24 +1466,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       const editBtn = document.getElementById("btn-edit-tea");
       if(!editBtn) return;
       if(editBtn.dataset.mode === "view"){
-        // Switch to edit mode — show form, hide view
-        document.getElementById("detail-view-body").style.display = "none";
-        document.getElementById("detail-edit-body").style.display = "block";
+        unlockForm();
         editBtn.textContent = "💾 Speichern";
         editBtn.dataset.mode = "edit";
-        document.getElementById("gallery-add").style.display = "flex";
-        document.getElementById("gallery-delete-btn").style.display = currentPhotos.length > 0 ? "flex" : "none";
       } else {
-        // Save and switch back to view mode
         await saveCurrentTea(true);
-        const t = await dbGet("teas", currentTeaId);
-        if(t) renderViewBody(t);
-        document.getElementById("detail-edit-body").style.display = "none";
-        document.getElementById("detail-view-body").style.display = "block";
+        lockForm();
         editBtn.textContent = "✏️ Bearbeiten";
         editBtn.dataset.mode = "view";
-        document.getElementById("gallery-add").style.display = "none";
-        document.getElementById("gallery-delete-btn").style.display = "none";
         await loadTeasAndRender();
       }
     });
@@ -1506,32 +1497,37 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   /* ============================================================
      STAR WIDGET (0-5, halbe Schritte)
   ============================================================ */
+  function starHalfSvg(i, value){
+    const fill="#D97757", empty="#E5E2D9";
+    let mode = value>=i ? "full" : value>=i-0.5 ? "half" : "empty";
+    if(mode==="half"){
+      const gid="sh"+i+Math.random().toString(36).slice(2);
+      return `<svg viewBox="0 0 24 24"><defs><linearGradient id="${gid}" x1="0" x2="1" y1="0" y2="0"><stop offset="50%" stop-color="${fill}"/><stop offset="50%" stop-color="${empty}"/></linearGradient></defs><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21.2 L12 17.5 L5.8 21.2 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="url(#${gid})"/></svg>`;
+    }
+    return `<svg viewBox="0 0 24 24"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21.2 L12 17.5 L5.8 21.2 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="${mode==="full"?fill:empty}"/></svg>`;
+  }
+
   function renderStarWidget(value){
     const wrap = document.getElementById("stars-widget");
     if(!wrap) return;
     wrap.innerHTML = "";
-    wrap.style.cssText = "display:flex;align-items:center;gap:14px;";
-
-    const minus = document.createElement("button");
-    minus.type = "button";
-    minus.textContent = "−";
-    minus.style.cssText = "width:34px;height:34px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface-2);font-size:20px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;";
-    minus.addEventListener("click", () => setCurrentRating(Math.max(0, (value||0) - 0.5)));
-
-    const num = document.createElement("span");
-    num.id = "star-rating-label";
-    num.style.cssText = "font-size:32px;font-weight:700;color:var(--terracotta);min-width:52px;text-align:center;font-family:var(--font-display);";
-    num.textContent = value > 0 ? value.toFixed(1) : "–";
-
-    const plus = document.createElement("button");
-    plus.type = "button";
-    plus.textContent = "+";
-    plus.style.cssText = "width:34px;height:34px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface-2);font-size:20px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;";
-    plus.addEventListener("click", () => setCurrentRating(Math.min(5, (value||0) + 0.5)));
-
-    wrap.appendChild(minus);
-    wrap.appendChild(num);
-    wrap.appendChild(plus);
+    wrap.style.cssText = "display:flex;gap:3px;align-items:center;";
+    for(let i=1;i<=5;i++){
+      const btn = document.createElement("div");
+      btn.style.cssText = "width:30px;height:30px;cursor:pointer;flex:none;";
+      btn.innerHTML = starHalfSvg(i, value);
+      btn.addEventListener("click", (e) => {
+        const rect = btn.getBoundingClientRect();
+        const isHalf = e.clientX - rect.left < rect.width/2;
+        setCurrentRating(isHalf ? i-0.5 : i);
+      });
+      wrap.appendChild(btn);
+    }
+    const lbl = document.createElement("span");
+    lbl.id = "star-rating-label";
+    lbl.style.cssText = "margin-left:6px;font-size:13px;color:var(--muted);";
+    lbl.textContent = value > 0 ? value.toFixed(1) : "–";
+    wrap.appendChild(lbl);
   }
 
   
