@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.27</title>
+<title>Teadrunk v3.29</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -389,7 +389,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
           </svg>
         </button>
         <button class="save-pill" id="save-pill" title="Auto-Speicher einrichten"></button>
-        <button class="icon-btn" id="btn-import-json" title="Daten laden" style="display:none;">
+        <button class="icon-btn" id="btn-import-json" title="JSON laden">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3D3929" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
           </svg>
@@ -481,6 +481,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <div class="gallery-dots" id="gallery-dots"></div>
     </div>
     <input type="file" id="photo-input" accept="image/*" multiple style="display:none;">
+<input type="file" id="json-import-input" accept="application/json,.json" style="display:none;">
 
     <!-- READ VIEW: same visual as edit, fields non-interactive -->
     <div class="detail-body" id="detail-view-body">
@@ -587,7 +588,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.27</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.29</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -724,12 +725,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       pill.textContent = "💾 " + (_fileHandle.name || FILE_NAME);
       pill.className = "save-pill has-file";
       pill.style.display = "inline-flex";
-      if(importBtn) importBtn.style.display = "none";
+  
     } else {
       pill.textContent = "💾 Tippen";
       pill.className = "save-pill no-file";
       pill.style.display = "inline-flex";
-      if(importBtn) importBtn.style.display = "flex";
+  
     }
   }
 
@@ -1130,8 +1131,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     const all = await dbGetAll("teas");
     if(!all.length){ toast("Keine Tees zum Exportieren"); return; }
 
-    const XLSX = window.XLSX;
-    if(!XLSX){ toast("Exportfunktion nicht verfügbar"); return; }
+    const XLSX = window.XLSX || (typeof make_xlsx_lib !== "undefined" ? exports : null);
+    if(!XLSX || !XLSX.utils){ toast("Exportfunktion nicht verfügbar"); return; }
 
     // Tabellenblatt: alle Tees
     const headers = ["Name","Originalname","Typ","Teesorte","Herkunftsland","Status","Note","Preis/kg (€)","Gekauft bei","Notizen","Erstellt","Aktualisiert"];
@@ -1223,7 +1224,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.27";
+  const APP_VERSION = "v3.29";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1289,6 +1290,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 
     document.getElementById("btn-add").addEventListener("click", createNewTea);
     document.getElementById("btn-export").addEventListener("click", exportToExcel);
+    document.getElementById("btn-import-json").addEventListener("click", () => document.getElementById("json-import-input").click());
+    document.getElementById("json-import-input").addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if(file) await importFromJSON(file);
+    });
 
     document.getElementById("brand-logo").addEventListener("click", showVersionModal);
   }
