@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.33</title>
+<title>Teadrunk v3.34</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -410,7 +410,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
           <tr>
             <th data-key="name">Name<span class="arrow">▲</span></th>
             <th data-key="teesorte">Teesorte<span class="arrow">▲</span></th>
-            <th data-key="bewertung">Note<span class="arrow">▲</span></th>
+            <th data-key="bewertung">Bewertung<span class="arrow">▲</span></th>
           </tr>
         </thead>
         <tbody id="tea-tbody"></tbody>
@@ -573,7 +573,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <path d="M31 9 C31.5 7 30.5 6 31 4" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
     </svg>
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.33</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.34</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-confirm" id="version-clear-photos" style="background:var(--danger);border-color:var(--danger);">Alle Fotos löschen</button>
@@ -1215,7 +1215,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.33";
+  const APP_VERSION = "v3.34";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
