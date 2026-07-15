@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Teadrunk v3.36</title>
+<title>Teadrunk v3.37</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -458,6 +458,12 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       <button id="gallery-delete-btn" title="Foto löschen" style="display:none;position:absolute;top:10px;left:10px;width:36px;height:36px;border-radius:999px;background:rgba(181,72,58,0.85);border:none;align-items:center;justify-content:center;cursor:pointer;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
       </button>
+      <button id="gallery-rotate-btn" title="Foto drehen" style="display:none;position:absolute;top:10px;left:54px;width:36px;height:36px;border-radius:999px;background:rgba(0,0,0,0.55);border:none;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
       <button id="gallery-star-btn" title="Als Hauptbild setzen" class="gallery-star">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21.2 L12 17.5 L5.8 21.2 L7.3 14.1 L2 9.3 L9.1 8.6 Z"/>
@@ -565,7 +571,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
   <div class="modal-card" style="text-align:center;max-width:280px;">
     <img src="data:image/png;base64,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" width="48" height="48" style="border-radius:999px;" alt="Teadrunk">
     <h3 class="modal-title">Teadrunk</h3>
-    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.36</p>
+    <p class="modal-message" style="font-size:22px;font-weight:700;color:var(--terracotta);margin:4px 0 6px;">v3.37</p>
     <p class="modal-message">Deine persönliche Tee-Sammlung</p>
     <div class="modal-actions" style="flex-direction:column;gap:8px;">
       <button class="modal-btn modal-btn-cancel" id="version-modal-close" style="width:100%;">Schließen</button>
@@ -1206,7 +1212,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     toast("✓ Export: " + filename);
   }
 
-  const APP_VERSION = "v3.36";
+  const APP_VERSION = "v3.37";
 
   function showVersionModal(){
     const m = document.getElementById("version-modal");
@@ -1459,6 +1465,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         editBtn.dataset.mode = "edit";
         document.getElementById("gallery-add").style.display = "flex";
         document.getElementById("gallery-delete-btn").style.display = currentPhotos.length > 0 ? "flex" : "none";
+        document.getElementById("gallery-rotate-btn").style.display = currentPhotos.length > 0 ? "flex" : "none";
       } else {
         await saveCurrentTea(true);
         const t = await dbGet("teas", currentTeaId);
@@ -1469,6 +1476,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
         editBtn.dataset.mode = "view";
         document.getElementById("gallery-add").style.display = "none";
         document.getElementById("gallery-delete-btn").style.display = "none";
+        document.getElementById("gallery-rotate-btn").style.display = "none";
         await loadTeasAndRender();
       }
     });
@@ -1573,6 +1581,8 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
       if(delBtnE) delBtnE.style.display = "none";
       const starBtnE = document.getElementById("gallery-star-btn");
       if(starBtnE) starBtnE.style.display = "none";
+      const rotBtnE = document.getElementById("gallery-rotate-btn");
+      if(rotBtnE) rotBtnE.style.display = "none";
       return;
     }
     emptyEl.style.display = "none";
@@ -1580,6 +1590,9 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     nextBtn.style.display = currentPhotos.length>1 ? "flex" : "none";
     const delBtn = document.getElementById("gallery-delete-btn");
     if(delBtn) delBtn.style.display = currentPhotos.length > 0 ? "flex" : "none";
+    const rotBtn = document.getElementById("gallery-rotate-btn");
+    const isEdit = document.getElementById("btn-edit-tea") && document.getElementById("btn-edit-tea").dataset.mode === "edit";
+    if(rotBtn) rotBtn.style.display = (currentPhotos.length > 0 && isEdit) ? "flex" : "none";
     updateGalleryStar();
 
     track.innerHTML = currentPhotos.map(p => `<div class="gallery-slide"><img src="${p.dataURL}"></div>`).join("");
@@ -1656,6 +1669,27 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     renderGallery();
   }
 
+  async function rotatePhoto(index){
+    const photo = currentPhotos[index];
+    if(!photo || !photo.dataURL) return;
+    // Rotate 90° clockwise using canvas
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.src = photo.dataURL; });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.height;
+    canvas.height = img.width;
+    const ctx = canvas.getContext("2d");
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    const newDataURL = canvas.toDataURL("image/jpeg", 0.9);
+    photo.dataURL = newDataURL;
+    await dbPut("photos", photo);
+    currentPhotos[index] = photo;
+    renderGallery();
+    scheduleSaveToFile();
+  }
+
   function resizeImageFile(file){
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1717,8 +1751,10 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
     document.getElementById("gallery-next").addEventListener("click", () => goToSlide(currentSlide+1, true));
     document.getElementById("gallery-add").addEventListener("click", () => document.getElementById("photo-input").click());
     document.getElementById("gallery-star-btn").addEventListener("click", () => { if(currentPhotos.length > 0 && currentSlide !== 0) setMainPhoto(currentSlide); });
+    document.getElementById("gallery-rotate-btn").addEventListener("click", () => { if(currentPhotos.length > 0) rotatePhoto(currentSlide); });
     document.getElementById("gallery-delete-btn").addEventListener("click", () => { if(currentPhotos.length > 0) deletePhoto(currentSlide); });
     document.getElementById("gallery-star-btn").addEventListener("click", () => { if(currentPhotos.length > 0 && currentSlide !== 0) setMainPhoto(currentSlide); });
+    document.getElementById("gallery-rotate-btn").addEventListener("click", () => { if(currentPhotos.length > 0) rotatePhoto(currentSlide); });
     document.getElementById("photo-input").addEventListener("change", async (e) => {
       const files = Array.from(e.target.files || []);
       e.target.value = "";
